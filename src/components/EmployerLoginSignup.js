@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+// import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+// import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+
 
 export default function EmployerLoginSignup() {
     const [isSignup, setIsSignup] = useState(true); // Toggle between signup and login
@@ -40,6 +43,35 @@ export default function EmployerLoginSignup() {
         }
     };
 
+    // const handleGoogleSignIn = async () => {
+    //     const provider = new GoogleAuthProvider();
+    //     try {
+    //         const result = await signInWithPopup(auth, provider);
+    //         const user = result.user;
+    
+    //         // Reference to the employer's document
+    //         const employerDocRef = doc(db, "employers", user.uid);
+    //         const employerDoc = await getDoc(employerDocRef);
+    
+    //         // If the employer doesn't already exist in Firestore, create a new document
+    //         if (!employerDoc.exists()) {
+    //             const employerData = {
+    //                 employerName: user.displayName || '', // You may pull this from Google account info
+    //                 companyName: '', // Manually filled later
+    //                 logo: '',
+    //                 banner: ''
+    //             };
+    //             await setDoc(doc(db, "employers", user.uid), employerData);
+    //         }
+    
+    //         navigate('/employer/Dashboard'); // Redirect to dashboard
+    //     } catch (error) {
+    //         setError(error.message);
+    //     }
+    // };
+    
+    
+
     return (
         <div className="container mt-5">
             <h2>{isSignup ? 'Employer Sign Up' : 'Employer Login'}</h2>
@@ -53,6 +85,7 @@ export default function EmployerLoginSignup() {
                             id="employerName" 
                             value={employerName}
                             onChange={(e) => setEmployerName(e.target.value)}
+                            required
                         />
                     </div>
                     <div className="mb-3">
@@ -63,6 +96,7 @@ export default function EmployerLoginSignup() {
                             id="companyName" 
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
+                            required
                         />
                     </div>
                 </>
@@ -75,6 +109,7 @@ export default function EmployerLoginSignup() {
                     id="email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                 />
             </div>
             <div className="mb-3">
@@ -85,8 +120,13 @@ export default function EmployerLoginSignup() {
                     id="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                 />
             </div>
+            {/* <button className="btn btn-outline-danger mt-3" onClick={handleGoogleSignIn}>
+                Sign in with Google
+            </button> */}
+
             {error && <div className="alert alert-danger">{error}</div>}
             <button className="btn btn-primary" onClick={handleAuth}>
                 {isSignup ? 'Sign Up' : 'Login'}

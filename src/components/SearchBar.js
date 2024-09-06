@@ -78,6 +78,7 @@ const SearchBar = ({ initialKeyword = "", initialLocation = "Select City", initi
     
                 jobAdsSnapshot.forEach(doc => {
                     const jobData = doc.data();
+                    const jobId = doc.id;  // Get the job ID
                     const { title, location: jobLocation, jobType, salary } = jobData;
     
                     // Convert job salary to number for comparison
@@ -90,7 +91,7 @@ const SearchBar = ({ initialKeyword = "", initialLocation = "Select City", initi
                     const salaryMatch = selectedSalary === "" || jobSalaryNumber >= selectedSalaryNumber;
     
                     if (keywordMatch && locationMatch && workTypeMatch && salaryMatch) {
-                        jobs.push({ ...jobData, employer: employerData });
+                        jobs.push({ id: jobId, ...jobData, employer: { ...employerData, id: employerId } });
                     }
                 });
             }

@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import EmployerJobModal from './EmployerJobModal';
 import { getAuth } from 'firebase/auth';
-import { Link, useNavigate } from 'react-router-dom';
-
 import { formatDate } from "../script";
 
-export default function Dashboard() 
-{
+export default function EmployerJobs() {
     const auth = getAuth();
     const [currentUserUid, setCurrentUserUid] = useState('');
     const [employerData, setEmployerData] = useState(null);
     const [jobs, setJobs] = useState([]);
-    const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
+    const [selectedJob, setSelectedJob] = useState(null);
 
     useEffect(() => {
         const fetchCurrentUserUid = () => {
@@ -48,26 +47,67 @@ export default function Dashboard()
         }
     }, [currentUserUid]);
 
-
-    const handleNavigateJobs = () => {
-        navigate("/employer/EmployerJobs");
+    const handleEditClick = (job) => {
+        setSelectedJob(job);
+        setShowModal(true);
     };
 
-    return(
-    <>
-        <div className='p-3'>
-            <h3 className=''>
-                Current Openings
-            </h3>
-            
-            <div>
-            
+    const handleAddJobClick = () => {
+        setSelectedJob(null); // Ensure that we're adding a new job, not editing an existing one
+        setShowModal(true);
+    };
+
+    const handleJobUpdate = async (updatedJob) => {
+        try {
+            if (!currentUserUid || !selectedJob) return;
+
+            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', selectedJob.id);
+            await updateDoc(jobDocRef, updatedJob);
+            // Refresh the job list
+            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
+            const jobsSnapshot = await getDocs(jobsQuery);
+            const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setJobs(jobsList);
+        } catch (error) {
+            console.error('Error updating job:', error);
+        }
+    };
+
+    const handleJobDelete = async (jobId) => {
+        try {
+            if (!currentUserUid) return;
+
+            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', jobId);
+            await deleteDoc(jobDocRef);
+            // Refresh the job list
+            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
+            const jobsSnapshot = await getDocs(jobsQuery);
+            const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setJobs(jobsList);
+        } catch (error) {
+            console.error('Error deleting job:', error);
+        }
+    };
+
+    return (
+        <div className="mt-4">
+            <div className="row mb-3">
+                <div className="col-md-4">
+                    <div className="card h-100 create-job-card align-items-center justify-content-center shadow" onClick={handleAddJobClick}>
+                        <div className="card-body text-center mt-5">
+                            <h5 className="card-title">Create New Job Listing</h5>
+                            <p className="card-text">Click here to add a new job advertisement.</p>
+                            <h1 className='display-3'>+</h1>
+                        </div>
+                    </div>
+                </div>
                 {jobs.length > 0 && jobs.map(job => (
                     <div key={job.id} className="col-md-4">
                         <div className="card h-100 job-card shadow">
                             <div className="card-body">
                                 <div className='d-flex float-end flex-column m-2'>
-                                    <Link to="/employer/EmployerJobs"><button className="btn btn-secondary">Go to</button></Link>
+                                    <button className="btn btn-secondary" onClick={() => handleEditClick(job)}>Edit</button>
+                                    <button className="btn btn-danger mt-2" onClick={() => handleJobDelete(job.id)}>Delete</button>
                                 </div>
                                 <img src={employerData.logo} className="logo rounded-circle" alt="company logo" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
                                 <h5 className="card-title">{job.title}</h5>
@@ -86,36 +126,13 @@ export default function Dashboard()
                         </div>
                     </div>
                 ))}
-                {jobs.length === 0 && (
-                <div className="col-md-4" onClick={() => handleNavigateJobs()}>
-                    <div className="card h-100 create-job-card align-items-center justify-content-center shadow">
-                        <div className="card-body text-center mt-5">
-                            <h5 className="card-title">Create New Job Listing</h5>
-                            <p className="card-text">Click here to add a new job advertisement.</p>
-                            <h1 className='display-3'>+</h1>
-                        </div>
-                    </div>
-                </div>
-                )}
             </div>
-
-            <h3 className='mt-5'>
-                Candidates
-            </h3>
-            <div className='card'>
-                <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio1" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio1">Radio 1</label>
-
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio2">Radio 2</label>
-
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio3">Radio 3</label>
-                </div>
-            </div>
-
+            <EmployerJobModal 
+                show={showModal} 
+                handleClose={() => setShowModal(false)} 
+                job={selectedJob}
+                onJobUpdate={handleJobUpdate}
+            />
         </div>
-    </>
     );
 }

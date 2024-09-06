@@ -59,7 +59,7 @@ export default function Header() {
                 <nav>
                     <ul className="nav">
                         <li className="nav-item">
-                            <Link to="/" className="nav-link text-light">Jobs</Link>
+                            <Link to="/Jobs" className="nav-link text-light">Jobs</Link>
                         </li>
                         <li className="nav-item">
                             <Link to="/Companies" className="nav-link text-light">Companies</Link>
@@ -69,13 +69,13 @@ export default function Header() {
                         </li> */}
                         {user && (
                             <li className="nav-item dropdown">
-                                <Link className="nav-link dropdown-toggle text-light" to="/ProfilePage" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <Link className="nav-link dropdown-toggle text-light" to="/user/Dashboard" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Profile
                                 </Link>
                                 <ul className="dropdown-menu bg-dark" aria-labelledby="profileDropdown">
-                                    <li><Link className="dropdown-item text-light" to="/ProfilePage">View Profile</Link></li>
-                                    <li><Link className="dropdown-item text-light" to="/AppliedJobs">Applied Jobs</Link></li>
-                                    <li><Link className="dropdown-item text-light" to="/BookmarkedJobs">Bookmarked Jobs</Link></li>
+                                    <li><Link className="dropdown-item text-light" to="/user/Dashboard">View Profile</Link></li>
+                                    <li><Link className="dropdown-item text-light" to="/user/AppliedJobs">Applied Jobs</Link></li>
+                                    <li><Link className="dropdown-item text-light" to="/user/BookmarkedJobs">Bookmarked Jobs</Link></li>
                                     <li><hr className="dropdown-divider" /></li>
                                     <li><button className="dropdown-item text-light" onClick={handleLogout}>Logout</button></li>
                                 </ul>

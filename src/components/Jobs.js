@@ -1,138 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from './firebase';
-import JobModal from './JobModal';
-import { getAuth } from 'firebase/auth';
-import { formatDate } from "../script";
+import React, { useEffect, useState } from "react";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { formatDate } from "../script.js";
+import JobSidebar from "./JobSidebar.js";
+import "../style.css";
 
 export default function Jobs() {
-    const auth = getAuth();
-    const [currentUserUid, setCurrentUserUid] = useState('');
-    const [employerData, setEmployerData] = useState(null);
     const [jobs, setJobs] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [sortCriteria, setSortCriteria] = useState('alphabetical'); // Default sort by alphabetical order
+    const db = getFirestore();
+    const [employerData, setEmployerData] = useState(null);
+
+    const [showSidebar, setShowSidebar] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
 
     useEffect(() => {
-        const fetchCurrentUserUid = () => {
-            const user = auth.currentUser;
-            if (user) {
-                setCurrentUserUid(user.uid);
+        const fetchJobs = async () => {
+            const jobsList = [];
+            const employersSnapshot = await getDocs(collection(db, 'employers'));
+
+            for (const employerDoc of employersSnapshot.docs) {
+                const employerId = employerDoc.id;
+                setEmployerData(employerDoc.data());
+
+                // Fetch job advertisements for each employer
+                const jobAdsSnapshot = await getDocs(collection(db, `employers/${employerId}/jobAdvertisements`));
+
+                jobAdsSnapshot.forEach((jobAdDoc) => {
+                    jobsList.push({
+                        employerId,
+                        ...jobAdDoc.data(), // Get job data
+                    });
+                });
             }
+
+            setJobs(jobsList);
         };
 
-        fetchCurrentUserUid();
-    }, [auth]);
+        fetchJobs();
+    }, [db]);
 
-    useEffect(() => {
-        if (currentUserUid) {
-            const fetchEmployerDataAndJobs = async () => {
-                try {
-                    const employerDocRef = doc(db, 'employers', currentUserUid);
-                    const employerDocSnap = await getDoc(employerDocRef);
-                    if (employerDocSnap.exists()) {
-                        setEmployerData(employerDocSnap.data());
-                    }
-
-                    const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
-                    const jobsSnapshot = await getDocs(jobsQuery);
-                    const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setJobs(jobsList);
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                }
-            };
-
-            fetchEmployerDataAndJobs();
+    const sortJobs = (jobsList) => {
+        switch (sortCriteria) {
+            case "alphabetical":
+                return jobsList.sort((a, b) => a.title.localeCompare(b.title)); // sort alphabetical order
+            case 'date':
+                return jobsList.sort((a, b) => new Date(b.datePosted) - new Date(a.datePosted)); // sort by most recent
+            default:
+                return jobsList;
         }
-    }, [currentUserUid]);
+    }
 
-    const handleEditClick = (job) => {
+    const handleSortChange = (e) => {
+        setSortCriteria(e.target.value);
+    };
+
+    const sortedJobs = sortJobs([...jobs]);
+
+    if (jobs.length === 0) {
+        return <div>Loading jobs...</div>;
+    }
+
+    const handleJobClick = (job) => {
         setSelectedJob(job);
-        setShowModal(true);
-    };
-
-    const handleAddJobClick = () => {
-        setSelectedJob(null); // Ensure that we're adding a new job, not editing an existing one
-        setShowModal(true);
-    };
-
-    const handleJobUpdate = async (updatedJob) => {
-        try {
-            if (!currentUserUid || !selectedJob) return;
-
-            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', selectedJob.id);
-            await updateDoc(jobDocRef, updatedJob);
-            // Refresh the job list
-            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
-            const jobsSnapshot = await getDocs(jobsQuery);
-            const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setJobs(jobsList);
-        } catch (error) {
-            console.error('Error updating job:', error);
-        }
-    };
-
-    const handleJobDelete = async (jobId) => {
-        try {
-            if (!currentUserUid) return;
-
-            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', jobId);
-            await deleteDoc(jobDocRef);
-            // Refresh the job list
-            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
-            const jobsSnapshot = await getDocs(jobsQuery);
-            const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setJobs(jobsList);
-        } catch (error) {
-            console.error('Error deleting job:', error);
-        }
+        setShowSidebar(true);
     };
 
     return (
-        <div className="mt-4">
-            <div className="row mb-3">
-                <div className="col-md-4">
-                    <div className="card h-100 create-job-card align-items-center justify-content-center shadow" onClick={handleAddJobClick}>
-                        <div className="card-body text-center mt-5">
-                            <h5 className="card-title">Create New Job Listing</h5>
-                            <p className="card-text">Click here to add a new job advertisement.</p>
-                            <h1 className='display-3'>+</h1>
-                        </div>
+        <>
+            <div className="container mt-5">
+                <div className="m-2 d-flex justify-content-between align-items-center text-end">
+                    <h1>All Job Listings</h1>
+                    <div>
+                        <label className="me-2" htmlFor="sort">Sort by: </label>
+                        <select id="sort" value={sortCriteria} onChange={handleSortChange}>
+                            <option value="alphabetical">Alphabetical (A-Z)</option>
+                            <option value="date">Date (Newest First)</option>
+                        </select>
                     </div>
                 </div>
-                {jobs.length > 0 && jobs.map(job => (
-                    <div key={job.id} className="col-md-4">
-                        <div className="card h-100 job-card shadow">
-                            <div className="card-body">
-                                <div className='d-flex float-end flex-column m-2'>
-                                    <button className="btn btn-secondary" onClick={() => handleEditClick(job)}>Edit</button>
-                                    <button className="btn btn-danger mt-2" onClick={() => handleJobDelete(job.id)}>Delete</button>
-                                </div>
-                                <img src={employerData.logo} className="logo rounded-circle" alt="company logo" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
-                                <h5 className="card-title">{job.title}</h5>
-                                <p className="card-text">Posted: {formatDate(job.datePosted)}</p>
-                                <ul className='list-group list-group-horizontal'>
-                                    <li className='list-group-item'><p className="card-text">Location: {job.location}</p></li>
-                                    <li className='list-group-item'><p className="card-text">Experience: {job.experience}</p></li>
-                                    <li className='list-group-item'><p className="card-text">Qualification: {job.qualification}</p></li>
-                                </ul>
-                                <div className="d-flex justify-content-between mt-5">
-                                    <span>{job.numApplications} Applications</span>
-                                    <span>{job.numApplicationsLastWeek} in the last week</span>
+
+                <div className={`job-container mt-2 ${showSidebar ? 'sidebar-visible' : ''}`}>
+                    {sortedJobs.length > 0 ? (
+                        sortedJobs.map((job, index) => (
+                            <div className="card job-list-card mb-3" onClick={() => handleJobClick(job)} key={index}>
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between">
+                                        <h5 className="card-title">{job.title}</h5>
+                                        <button type="button" className="btn rounded-circle bookmark-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-bookmark-heart" viewBox="0 0 16 16">
+                                                <path fillRule="evenodd" d="M8 4.41c1.387-1.425 4.854 1.07 0 4.277C3.146 5.48 6.613 2.986 8 4.412z"></path>
+                                                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <ul className="list-group list-group-horizontal">
+                                        <li className="list-group-item">{employerData?.companyName || 'N/A'}</li>
+                                        <li className="list-group-item">{job.jobType}</li>
+                                        <li className="list-group-item">Salary: {job.salary}k</li>
+                                        <li className="list-group-item">{job.location}</li>
+                                    </ul>
+                                    <p className="card-text mt-5 p-2 float-end">Posted: {formatDate(job.datePosted)}</p>
                                 </div>
                             </div>
-                            <div className="card-line" style={{ borderLeft: '5px solid #ff6600', position: 'absolute', top: 0, bottom: 0, left: 0, width: '5px' }}></div>
-                        </div>
-                    </div>
-                ))}
+                        ))
+                    ) : (
+                        <p>No job listings found.</p>
+                    )}
+                    {/* Sidebar Component */}
+                    <JobSidebar 
+                        show={showSidebar} 
+                        job={selectedJob} 
+                        employerData={employerData} 
+                        handleClose={() => setShowSidebar(false)} 
+                    />
+                </div>
             </div>
-            <JobModal 
-                show={showModal} 
-                handleClose={() => setShowModal(false)} 
-                job={selectedJob}
-                onJobUpdate={handleJobUpdate}
-            />
-        </div>
+        </>
     );
 }

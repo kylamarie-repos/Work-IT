@@ -61,8 +61,8 @@ export default function Sidebar() {
                         Dashboard
                     </Link>
                 </li>
-                <li className={`nav-item mt-3 ${location.pathname === '/employer/Jobs' ? 'active' : ''}`}>
-                    <Link to="/employer/Jobs" className="sidebar-nav-link">
+                <li className={`nav-item mt-3 ${location.pathname === '/employer/EmployerJobs' ? 'active' : ''}`}>
+                    <Link to="/employer/EmployerJobs" className="sidebar-nav-link">
                         Jobs
                     </Link>
                 </li>
