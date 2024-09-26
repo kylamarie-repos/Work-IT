@@ -4,15 +4,15 @@ import { collection, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore'
 import { db } from './firebase';
 import { getAuth } from 'firebase/auth';
 
-export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }) {
+export default function EmployerJobModal({ show, handleClose, job, employerData, onJobUpdate, onJobAdd }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [field, setField] = useState('');
     const [location, setLocation] = useState('');
     const [salary, setSalary] = useState('');
     const [jobType, setJobType] = useState('');
-    const [qualification, setQualification] = useState('');
-    const [experience, setExperience] = useState('');
+    const [qualifications, setQualification] = useState(['']);
+    const [experiences, setExperience] = useState(['']);
     const [responsibilities, setResponsibilities] = useState(['']);
     const [questions, setQuestions] = useState(['']);
     const [locations, setLocations] = useState([]);
@@ -21,17 +21,23 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
     const [fields, setFields] = useState([]);
     const [userUid, setUserUid] = useState('');
 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // Fetch location data
                 const locationSnapshot = await getDocs(collection(db, 'locations'));
                 const locationList = locationSnapshot.docs.map(doc => doc.data().city);
-                setLocations(locationList);
+                const locationAlphabeticalList = locationList.sort((a, b) => a.localeCompare(b));
+                setLocations(locationAlphabeticalList);
 
                 // Fetch salary data
                 const salarySnapshot = await getDocs(collection(db, 'salaries'));
-                const salaryList = salarySnapshot.docs.map(doc => doc.data().salary);
+                let salaryList = salarySnapshot.docs.map(doc => doc.data().salary);
+
+                // Sort salaries in ascending order
+                salaryList = salaryList.sort((a, b) => a - b);
+
                 setSalaries(salaryList);
 
                 // Fetch job type data
@@ -42,9 +48,10 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
                 // Fetch fields data for autocomplete
                 const fieldsSnapshot = await getDocs(collection(db, 'fields'));
                 const fieldList = fieldsSnapshot.docs.map(doc => doc.data().field);
-                setFields(fieldList);
+                const fieldAlphabeticalList = fieldList.sort((a, b) => a.localeCompare(b)); // sort alphabetical order
+                setFields(fieldAlphabeticalList);
 
-                // Get current user's UID
+                // Get current User's UID
                 const auth = getAuth();
                 const user = auth.currentUser;
                 if (user) {
@@ -66,8 +73,8 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
             setLocation(job.location || '');
             setSalary(job.salary || '');
             setJobType(job.jobType || '');
-            setQualification(job.qualification || '');
-            setExperience(job.experience || '');
+            setQualification(job.qualifications || ['']);
+            setExperience(job.experiences || ['']);
             setResponsibilities(job.responsibilities || ['']);
             setQuestions(job.questions || ['']);
         } else {
@@ -78,12 +85,13 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
             setLocation('');
             setSalary('');
             setJobType('');
-            setQualification('');
-            setExperience('');
+            setQualification(['']);
+            setExperience(['']);
             setResponsibilities(['']);
             setQuestions(['']);
         }
     }, [job]);
+    
 
     const handleSave = async () => {
         try {
@@ -93,8 +101,8 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
             }
 
             // Check if all required fields are filled
-            if (!title || !description || !field || !location || !salary || !jobType || !qualification || !experience) {
-                console.error("Please fill in all required fields");
+            if (!title || !description || !field || !location || !salary || !jobType || !qualifications || !experiences || !responsibilities || !questions) {
+                alert("Please fill in all required fields");
                 return;
             }
 
@@ -105,13 +113,16 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
                 location,
                 salary,
                 jobType,
-                qualification,
-                experience,
+                qualifications,
+                experiences,
                 responsibilities,
                 questions,
                 datePosted: new Date().toISOString(),
-                numApplications: 0,
-                numApplicationsLastWeek: 0
+                ...(job ? {} : {
+                    numApplications: 0,
+                    numApplicationsLastWeek: 0,
+                }),
+                companyName: employerData.companyName
             };
 
             if (job && job.id) {
@@ -122,6 +133,7 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
             } else {
                 // Add new job
                 await addDoc(collection(db, 'employers', userUid, 'jobAdvertisements'), jobData);
+                onJobAdd();
             }
 
             handleClose();
@@ -129,6 +141,38 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
             console.error("Error saving job:", error);
         }
     };
+
+    const handleQualificationChange = (index, value) => {
+        const newQualifications = [...qualifications];
+        newQualifications[index] = value;
+        setQualification(newQualifications);
+    };
+
+    const handleAddQualification = () => {
+        setQualification([...qualifications, '']);
+    };
+
+    const handleRemoveQualification = (index) => {
+        const newQualifications = qualifications.filter((_, i) => i !== index);
+        setQualification(newQualifications);
+    };
+
+    const handleExperienceChange = (index, value) => {
+        const newExperience = [...experiences];
+        newExperience[index] = value;
+        setExperience(newExperience);
+    };
+
+    const handleAddExperience = () => {
+        setExperience([...experiences, '']);
+    };
+
+    const handleRemoveExperience = (index) => {
+        const newExperience = experiences.filter((_, i) => i !== index);
+        setExperience(newExperience);
+    };
+
+
 
     const handleResponsibilityChange = (index, value) => {
         const newResponsibilities = [...responsibilities];
@@ -159,6 +203,10 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
         const newQuestions = questions.filter((_, i) => i !== index);
         setQuestions(newQuestions);
     };
+
+    const formattedSalaries = salaries.map(salary => 
+        salary >= 350 ? "350k+" : `${salary}k`
+    );
 
     return (
         <Modal show={show} onHide={handleClose} size="xl">
@@ -197,8 +245,10 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
                         <Form.Label>Salary</Form.Label>
                         <Form.Control as="select" value={salary} onChange={(e) => setSalary(e.target.value)}>
                             <option value="">Select Salary</option>
-                            {salaries.map((salary, index) => (
-                                <option key={index} value={salary}>{salary}k</option>
+                            {formattedSalaries.map((formattedSalary, index) => (
+                                <option key={index} value={formattedSalary}>
+                                {formattedSalary}
+                                </option>
                             ))}
                         </Form.Control>
                     </Form.Group>
@@ -211,13 +261,25 @@ export default function EmployerJobModal({ show, handleClose, job, onJobUpdate }
                             ))}
                         </Form.Control>
                     </Form.Group>
-                    <Form.Group controlId="formQualification" className='mb-3'>
-                        <Form.Label>Qualification Required</Form.Label>
-                        <Form.Control type="text" value={qualification} onChange={(e) => setQualification(e.target.value)} />
+                    <Form.Group controlId="formQualifications" className='mb-3'>
+                        <Form.Label>Qualifications</Form.Label>
+                        {qualifications.map((qualification, index) => (
+                            <div key={index} className="d-flex mb-2">
+                                <Form.Control type="text" value={qualification} onChange={(e) => handleQualificationChange(index, e.target.value)} />
+                                <Button variant="danger" onClick={() => handleRemoveQualification(index)} className="ms-2">Remove</Button>
+                            </div>
+                        ))}
+                        <Button variant="primary" onClick={handleAddQualification}>Add Qualification</Button>
                     </Form.Group>
                     <Form.Group controlId="formExperience" className='mb-3'>
-                        <Form.Label>Experience Required</Form.Label>
-                        <Form.Control type="text" value={experience} onChange={(e) => setExperience(e.target.value)} />
+                        <Form.Label>Experience</Form.Label>
+                        {experiences.map((experience, index) => (
+                            <div key={index} className="d-flex mb-2">
+                                <Form.Control type="text" value={experience} onChange={(e) => handleExperienceChange(index, e.target.value)} />
+                                <Button variant="danger" onClick={() => handleRemoveExperience(index)} className="ms-2">Remove</Button>
+                            </div>
+                        ))}
+                        <Button variant="primary" onClick={handleAddExperience}>Add Experience</Button>
                     </Form.Group>
                     <Form.Group controlId="formResponsibilities" className='mb-3'>
                         <Form.Label>Responsibilities</Form.Label>

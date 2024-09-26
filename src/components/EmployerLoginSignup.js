@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 // import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDocs, collection, where, query } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 // import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from './firebase';
+import { FirebaseError } from 'firebase/app';
 
 
 export default function EmployerLoginSignup() {
@@ -14,27 +17,58 @@ export default function EmployerLoginSignup() {
     const [companyName, setCompanyName] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [promptMessage, setPromptMessage] = useState('');
     const auth = getAuth();
     const db = getFirestore();
 
     const handleAuth = async () => {
         try {
             if (isSignup) {
+
+                if (!employerName || !companyName || !email || !password)
+                {
+                    alert("Please fill in all of the fields");
+                    return;
+                }
+
                 // Signup logic
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const uid = userCredential.user.uid;
+                const user = userCredential.user;
+                const uid = user.uid;
 
-                // Save employer data to Firestore
-                const employerData = {
-                    employerName,
-                    companyName,
-                    logo: '', // You can add functionality to upload a logo
-                    banner: '' // You can add functionality to upload a banner
-                };
-                await setDoc(doc(db, "employers", uid), employerData);
+                const logoStorageRef = ref(storage, `${user.uid}/logos`);
+                const bannerStorageRef = ref(storage, `${user.uid}/logos`);
+
+                const logoUrl = await getDownloadURL(logoStorageRef);
+                const bannerUrl = await getDownloadURL(bannerStorageRef);
+
+                try {
+                    // Save employer data to Firestore
+                    const employerData = {
+                        employerName,
+                        email,
+                        companyName,
+                        logo: logoUrl, 
+                        banner: bannerUrl 
+                    };
+                    await setDoc(doc(db, "employers", uid), employerData);
+                } catch {
+                    console.log("Error creating firestore document.");
+                    setError("Failed to create employer document in firestore. Please try again.", FirebaseError);
+                    return;
+                }
+
+                
                 navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful signup
             } else {
                 // Login logic
+                const q = query(collection(db, "employers"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    setPromptMessage('No account found with this email. Please sign up.');
+                    return;
+                }
                 await signInWithEmailAndPassword(auth, email, password);
                 navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful login
             }
@@ -123,6 +157,7 @@ export default function EmployerLoginSignup() {
                     required
                 />
             </div>
+            {promptMessage && <div className="alert alert-warning m-3">{promptMessage}</div>}
             {/* <button className="btn btn-outline-danger mt-3" onClick={handleGoogleSignIn}>
                 Sign in with Google
             </button> */}
@@ -133,7 +168,10 @@ export default function EmployerLoginSignup() {
             </button>
             <button 
                 className="btn btn-link" 
-                onClick={() => setIsSignup(!isSignup)}
+                onClick={() => {
+                    setIsSignup(!isSignup);
+                    setPromptMessage(''); // Reset the prompt message
+                }}
             >
                 {isSignup ? 'Already have an account? Login' : 'Need an account? Sign Up'}
             </button>

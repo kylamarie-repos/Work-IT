@@ -30,36 +30,59 @@ export default function SettingsPage() {
         fetchEmployerInfo();
     }, [auth.currentUser, db]);
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setUploading(true);
-            try {
-                const fileType = file.type.split('/')[1]; // Extract file type (e.g., 'png', 'jpg')
-                const storagePath = fileType === 'png' || fileType === 'jpg' ? `banners/${file.name}` : `logos/${file.name}`;
+    const handleFileChange = async (e, fileType) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            await uploadFile(selectedFile, fileType);
+        }
+    };
+
+    const uploadFile = async (file, fileKind) => {
+        if (!file) return;
+        setUploading(true);
+        try {
+            const userId = auth.currentUser.uid;
+            const fileType = file.type.split('/')[1]; // Extract file type (e.g., 'png', 'jpg')
+    
+            // Check for supported file types (png or jpg/jpeg)
+            if (fileType === "png" || fileType === "jpg" || fileType === "jpeg") {
+                // Determine the storage path based on whether it's a banner or logo
+                const storagePath = fileKind === "banner"
+                    ? `${userId}/banners/${file.name}` // Store Banner in user-specific folder
+                    : `${userId}/logos/${file.name}`; // Store Logo in user-specific folder
+    
+                // Create a reference to the storage location and upload the file
                 const storageRef = ref(storage, storagePath);
                 await uploadBytes(storageRef, file);
                 const url = await getDownloadURL(storageRef);
-                const field = storagePath.includes('banners') ? 'banner' : 'logo';
-
-                // Update Firestore document
-                const user = auth.currentUser;
-                if (user) {
-                    const employerDoc = doc(db, "employers", user.uid);
-                    await updateDoc(employerDoc, { [field]: url });
-                    if (field === 'banner') {
-                        setBannerUrl(url);
-                    } else {
-                        setLogoUrl(url);
-                    }
+    
+                // Get a reference to the employer document
+                const employerDocRef = doc(db, "employers", userId);
+    
+                if (fileKind === "banner") {
+                    setBannerUrl(url);
+                    // Update the bannerUrl in Firestore
+                    await updateDoc(employerDocRef, { banner: url });
+                    setEmployerInfo(prev => ({ ...prev, bannerUrl: url }));
+                    alert('Banner uploaded successfully!');
+                } else {
+                    setLogoUrl(url);
+                    // Update the logoUrl in Firestore
+                    await updateDoc(employerDocRef, { logo: url });
+                    setEmployerInfo(prev => ({ ...prev, logoUrl: url }));
+                    alert('Logo uploaded successfully!');
                 }
-            } catch (error) {
-                console.error('Error uploading file:', error);
-            } finally {
-                setUploading(false);
+            } else {
+                alert("Unsupported file type. Please upload a PNG or JPG.");
             }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+        } finally {
+            setUploading(false);
         }
     };
+    
+    
 
     if (!employerInfo) {
         return <div>Loading...</div>;
@@ -75,8 +98,14 @@ export default function SettingsPage() {
                     type="file" 
                     className="form-control" 
                     id="bannerUpload" 
-                    onChange={handleFileChange}
+                    onChange={(e) => handleFileChange(e, 'banner')}
+                    accept='.png, .jpg'
                 />
+                {bannerUrl && (
+                    <div className="mb-3">
+                        <a href={bannerUrl} target="_blank" rel="noopener noreferrer">View Banner</a>
+                    </div>
+                )}
             </div>
             <div className="mb-3">
                 <label htmlFor="logoUpload" className="form-label">Upload Logo</label>
@@ -84,22 +113,19 @@ export default function SettingsPage() {
                     type="file" 
                     className="form-control" 
                     id="logoUpload" 
-                    onChange={handleFileChange}
+                    onChange={(e) => handleFileChange(e, 'logo')}
+                    accept='.png, .jpg'
                 />
-            </div>
-            <div>
-                {bannerUrl && (
-                    <div className="mb-3">
-                        <a href={bannerUrl} target="_blank" rel="noopener noreferrer">View Banner</a>
-                    </div>
-                )}
+                
                 {logoUrl && (
                     <div className="mb-3">
                         <a href={logoUrl} target="_blank" rel="noopener noreferrer">View Logo</a>
                     </div>
                 )}
             </div>
+            <div>
             {uploading && <p>Uploading...</p>}
+            </div>
         </div>
     </>
     );

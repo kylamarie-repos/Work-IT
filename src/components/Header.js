@@ -59,6 +59,9 @@ export default function Header() {
                 <nav>
                     <ul className="nav">
                         <li className="nav-item">
+                            <Link to="/job-listings" className="nav-link text-light">Search</Link>
+                        </li>
+                        <li className="nav-item">
                             <Link to="/Jobs" className="nav-link text-light">Jobs</Link>
                         </li>
                         <li className="nav-item">

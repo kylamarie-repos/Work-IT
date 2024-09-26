@@ -60,8 +60,7 @@ export default function Dashboard()
                 Current Openings
             </h3>
             
-            <div>
-            
+            <div className='mt-3'>
                 {jobs.length > 0 && jobs.map(job => (
                     <div key={job.id} className="col-md-4">
                         <div className="card h-100 job-card shadow">
@@ -93,6 +92,7 @@ export default function Dashboard()
                             <h5 className="card-title">Create New Job Listing</h5>
                             <p className="card-text">Click here to add a new job advertisement.</p>
                             <h1 className='display-3'>+</h1>
+                            <p><code>This will navigate to the jobs page</code></p>
                         </div>
                     </div>
                 </div>
@@ -102,17 +102,8 @@ export default function Dashboard()
             <h3 className='mt-5'>
                 Candidates
             </h3>
-            <div className='card'>
-                <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio1" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio1">Radio 1</label>
-
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio2">Radio 2</label>
-
-                    <input type="radio" className="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
-                    <label className="btn btn-outline-primary" for="btnradio3">Radio 3</label>
-                </div>
+            <div>
+                <p>This is where employers can see a preview of the candidates.</p>
             </div>
 
         </div>

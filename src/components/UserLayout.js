@@ -3,6 +3,8 @@ import { Route, Routes } from 'react-router-dom';
 import UserSidebar from './UserSidebar';
 import Dashboard from './ProfilePage';
 import Settings from './UserSettings';
+import AppliedJobs from './AppliedJobs';
+import BookmarkedJobs from './BookmarkedJobs';
 
 export default function UserLayout() {
   return (
@@ -13,6 +15,8 @@ export default function UserLayout() {
           <Routes>
               <Route path="/Dashboard" element={<Dashboard />} />
               <Route path="/Settings" element={<Settings />} />
+              <Route path="/AppliedJobs" element={<AppliedJobs />} />
+              <Route path="/BookmarkedJobs" element={<BookmarkedJobs />} />
           </Routes>
       </div>
     </div>

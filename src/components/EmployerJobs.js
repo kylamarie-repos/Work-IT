@@ -7,37 +7,39 @@ import { formatDate } from "../script";
 
 export default function EmployerJobs() {
     const auth = getAuth();
-    const [currentUserUid, setCurrentUserUid] = useState('');
+    const [userUid, setUserUid] = useState('');
     const [employerData, setEmployerData] = useState(null);
     const [jobs, setJobs] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
 
     useEffect(() => {
-        const fetchCurrentUserUid = () => {
-            const user = auth.currentUser;
-            if (user) {
-                setCurrentUserUid(user.uid);
-            }
+        const fetchUserUid = () => {
+            const auth = getAuth();
+                const user = auth.currentUser;
+                if (user) {
+                    setUserUid(user.uid);
+                }
         };
 
-        fetchCurrentUserUid();
+        fetchUserUid();
     }, [auth]);
 
     useEffect(() => {
-        if (currentUserUid) {
+        if (userUid) {
             const fetchEmployerDataAndJobs = async () => {
                 try {
-                    const employerDocRef = doc(db, 'employers', currentUserUid);
+                    const employerDocRef = doc(db, 'employers', userUid);
                     const employerDocSnap = await getDoc(employerDocRef);
                     if (employerDocSnap.exists()) {
                         setEmployerData(employerDocSnap.data());
                     }
 
-                    const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
+                    const jobsQuery = query(collection(db, 'employers', userUid, 'jobAdvertisements'));
                     const jobsSnapshot = await getDocs(jobsQuery);
                     const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setJobs(jobsList);
+
                 } catch (error) {
                     console.error('Error fetching data:', error);
                 }
@@ -45,7 +47,7 @@ export default function EmployerJobs() {
 
             fetchEmployerDataAndJobs();
         }
-    }, [currentUserUid]);
+    }, [userUid]);
 
     const handleEditClick = (job) => {
         setSelectedJob(job);
@@ -59,12 +61,11 @@ export default function EmployerJobs() {
 
     const handleJobUpdate = async (updatedJob) => {
         try {
-            if (!currentUserUid || !selectedJob) return;
-
-            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', selectedJob.id);
+            if (!userUid || !selectedJob) return;
+            const jobDocRef = doc(db, 'employers', userUid, 'jobAdvertisements', selectedJob.id);
             await updateDoc(jobDocRef, updatedJob);
             // Refresh the job list
-            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
+            const jobsQuery = query(collection(db, 'employers', userUid, 'jobAdvertisements'));
             const jobsSnapshot = await getDocs(jobsQuery);
             const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setJobs(jobsList);
@@ -75,12 +76,12 @@ export default function EmployerJobs() {
 
     const handleJobDelete = async (jobId) => {
         try {
-            if (!currentUserUid) return;
+            if (!userUid) return;
 
-            const jobDocRef = doc(db, 'employers', currentUserUid, 'jobAdvertisements', jobId);
+            const jobDocRef = doc(db, 'employers', userUid, 'jobAdvertisements', jobId);
             await deleteDoc(jobDocRef);
             // Refresh the job list
-            const jobsQuery = query(collection(db, 'employers', currentUserUid, 'jobAdvertisements'));
+            const jobsQuery = query(collection(db, 'employers', userUid, 'jobAdvertisements'));
             const jobsSnapshot = await getDocs(jobsQuery);
             const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setJobs(jobsList);
@@ -88,6 +89,20 @@ export default function EmployerJobs() {
             console.error('Error deleting job:', error);
         }
     };
+
+    const handleAddJob = async () => {
+        try {
+            if (!userUid) return;
+            // Fetch the latest job list after adding a job
+            const jobsQuery = query(collection(db, 'employers', userUid, 'jobAdvertisements'));
+            const jobsSnapshot = await getDocs(jobsQuery);
+            const jobsList = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setJobs(jobsList);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+        }
+    };
+    
 
     return (
         <div className="mt-4">
@@ -131,7 +146,9 @@ export default function EmployerJobs() {
                 show={showModal} 
                 handleClose={() => setShowModal(false)} 
                 job={selectedJob}
+                employerData={employerData}
                 onJobUpdate={handleJobUpdate}
+                onJobAdd={handleAddJob}
             />
         </div>
     );

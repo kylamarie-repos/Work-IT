@@ -61,14 +61,14 @@ export default function Sidebar() {
                         Profile Page
                     </Link>
                 </li>
-                <li className={`nav-item mt-3 ${location.pathname === '/user/Dashboard' ? 'active' : ''}`}>
-                    <Link to="/user/Dashboard" className="sidebar-nav-link">
-                        Profile Page
+                <li className={`nav-item mt-3 ${location.pathname === '/user/AppliedJobs' ? 'active' : ''}`}>
+                    <Link to="/user/AppliedJobs" className="sidebar-nav-link">
+                        Applied Jobs
                     </Link>
                 </li>
-                <li className={`nav-item mt-3 ${location.pathname === '/user/Dashboard' ? 'active' : ''}`}>
-                    <Link to="/user/Dashboard" className="sidebar-nav-link">
-                        Profile Page
+                <li className={`nav-item mt-3 ${location.pathname === '/user/BookmarkedJobs' ? 'active' : ''}`}>
+                    <Link to="/user/BookmarkedJobs" className="sidebar-nav-link">
+                        Bookmarked Jobs
                     </Link>
                 </li>
                 <li className={`nav-item mt-3 ${location.pathname === '/user/Settings' ? 'active' : ''}`}>

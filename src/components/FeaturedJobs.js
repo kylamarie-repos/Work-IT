@@ -21,6 +21,7 @@ export default function FeaturedJobs()
         <>
         <section className="container mt-5">
             <h2 className="mb-4">Featured Jobs</h2>
+            <sub>not yet implemented</sub>
             <div className="row">
                 {jobs.map((job, index) => (
                     <div key={index} className="col-md-4 mb-3">

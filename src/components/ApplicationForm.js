@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase'; // Ensure this is correctly imported
+import { storage } from './firebase';
 import { useNavigate } from "react-router-dom";
 
 export default function ApplicationForm() {
@@ -11,9 +11,11 @@ export default function ApplicationForm() {
     const db = getFirestore();
     const location = useLocation();
     const navigate = useNavigate();
+
     const { job } = location.state || {};
     const employerId = job?.employerId;
-
+    const companyName = job?.companyName;
+    const datePosted = job?.datePosted;
     const user = auth.currentUser;
 
     const [uploading, setUploading] = useState(false);
@@ -50,8 +52,7 @@ export default function ApplicationForm() {
         };
     
         fetchUserInfo();
-    }, [user, db, employerId]);  // Add employerId to dependencies if used in effect
-    
+    }, [user, db, employerId]); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -70,7 +71,7 @@ export default function ApplicationForm() {
         if (uploadedResume && !resumeUrl) {
             await uploadFile(uploadedResume, 'resume');
         }
-    
+
         const applicationData = {
             name: applicantName,
             resume: resumeUrl || '',
@@ -78,30 +79,35 @@ export default function ApplicationForm() {
             status: 'Applied',
             skills,
             appliedRole: job.title,
+            companyName,
             applicationDate: new Date(),
+            datePosted
         };
     
         try {
-            const employerId = job.employerId; // Extract employerId from job
+            const employerId = job.employerId;
             if (!employerId) {
                 console.error('Employer ID is missing!');
                 return;
             }
     
-            // Create a new document for the candidate
             const candidatesRef = doc(db, 'employers', employerId, 'candidates', user.uid);
-            await setDoc(candidatesRef, applicationData); // Use setDoc to create or overwrite the document
-    
-            // Create or update the appliedJobs document for the user
+            await setDoc(candidatesRef, applicationData);
+
             const appliedJobsRef = doc(db, 'users', user.uid, 'appliedJobs', job.id);
-            await setDoc(appliedJobsRef, applicationData); // Use setDoc to create or overwrite the document
+            await setDoc(appliedJobsRef, applicationData);
     
+            const jobRef = doc(db, 'employers', employerId, 'jobAdvertisements', job.id);
+            await updateDoc(jobRef, {
+                numApplications: increment(1) // Increment the number of applications by 1
+            });
+
+
             navigate("/Applied");
         } catch (error) {
             console.error("Error submitting application:", error);
         }
     };
-    
     
 
     const uploadFile = async (file, fileType) => {
@@ -110,8 +116,8 @@ export default function ApplicationForm() {
         setUploading(true);
         try {
             const storagePath = fileType === 'coverLetter'
-                ? `coverLetters/${auth.currentUser.uid}/${file.name}`
-                : `resumes/${auth.currentUser.uid}/${file.name}`;
+                ? `${auth.currentUser.uid}coverLetters/${auth.currentUser.uid}/${file.name}`
+                : `${auth.currentUser.uid}resumes/${auth.currentUser.uid}/${file.name}`;
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);
@@ -149,10 +155,7 @@ export default function ApplicationForm() {
             }
         }
     };
-    
 
-    
-    
 
     return (
         <div className='container'>
@@ -231,8 +234,8 @@ export default function ApplicationForm() {
                         <div className='mt-4'>
                             <label>Resume</label>
                             {resumeUrl ? (
-                                <ul class="list-group list-group-horizontal">
-                                <li class="list-group-item"><p className='mt-2'>Resume already uploaded <br/> <a href={resumeUrl} target="_blank" rel="noopener noreferrer">View Resume</a></p></li>
+                                <ul className="list-group list-group-horizontal">
+                                <li className="list-group-item"><p className='mt-2'>Resume already uploaded <br/> <a href={resumeUrl} target="_blank" rel="noopener noreferrer">View Resume</a></p></li>
                                 </ul>
                             ) : (
                                 <>

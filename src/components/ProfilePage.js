@@ -10,6 +10,8 @@ export default function ProfilePage() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [profilePictureUrl, setProfilePictureUrl] = useState('');
+    const [skills, setSkills] = useState(['']);
+    const [resumeUrl, setResumeUrl] = useState('');
 
     const auth = getAuth();
     const db = getFirestore();
@@ -29,9 +31,15 @@ export default function ProfilePage() {
                     setFirstName(data.firstName || '');  // Set firstName or default to empty string
                     setLastName(data.lastName || '');  // Set lastName or default to empty string
                     setProfilePictureUrl(data.profilePictureUrl || '');  // Set profile picture or default to empty string
+                    setSkills(data.skills || ['']);
+                    setResumeUrl(data.resumeUrl || '');
                 } else {
                     setPromptMessage('Please complete your profile by adding your personal information.');
                 }
+            }
+            else
+            {
+                alert("No user found.");
             }
         };
 
@@ -57,8 +65,28 @@ export default function ProfilePage() {
                 </div>
                 <div className="card-body">
                     <h5 className="card-title">{firstName && lastName ? `${firstName} ${lastName}` : 'Incomplete Name'}</h5>
-                    <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                    <Link to={"/user/Settings"}><button className='btn btn-primary'>Edit Profile</button></Link>
+                    <p className="card-text">
+                        <div>
+                            <strong>Skills: </strong>
+                            <ul className='list-group list-group-horizontal'>
+                                {skills.map((skill, index) => (
+                                    <li className='list-group-item no-border' key={index}>
+                                        <button type="button" className="btn btn-primary rounded-pill" disabled>{skill}</button>
+                                    </li>
+                                ))}
+                            </ul>
+                            {!skills.length && <p>N/A</p>}
+                        </div>
+                        <div className='mt-3'>
+                        {resumeUrl ? (
+                        <Link to={resumeUrl} target="_blank" rel="noopener noreferrer"><button className='btn btn-success'>View Resume</button></Link>
+                            ) : (
+                                <p>No resume uploaded.</p>
+                            )}
+                        </div>
+                    
+                    </p>
+                    <Link to={"/user/Settings"}><button className='btn btn-primary float-end'>Edit Profile</button></Link>
                     {promptMessage && <div className="alert alert-info mt-4">{promptMessage}</div>}
                 </div>
             </div>

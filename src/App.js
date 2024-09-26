@@ -9,7 +9,6 @@ import JobListings from "./components/JobListings";
 import ApplicationForm from './components/ApplicationForm';
 import Applied from './components/Applied';
 import LoginSignup from "./components/LoginSignup";
-import ProfilePage from "./components/ProfilePage";
 import EmployerLoginSignup from "./components/EmployerLoginSignup";
 import EmployerLayout from './components/EmployerLayout';
 
@@ -58,8 +57,7 @@ export default function App() {
         <Route path="/job-listings" element={<JobListings />} />
         <Route path="/apply/:id" element={<ApplicationForm />} />
         <Route path="/Applied" element={<Applied />} />
-        <Route path="/LoginSignup" element={!user ? <LoginSignup /> : <Navigate to="/ProfilePage" />} />
-        <Route path="/ProfilePage" element={user ? <ProfilePage /> : <Navigate to="/LoginSignup" />} />
+        <Route path="/LoginSignup" element={!user ? <LoginSignup /> : <Navigate to="/user/Dashboard" />} />
         <Route path="/EmployerLoginSignup" element={!user ? <EmployerLoginSignup /> : <Navigate to="/employer/Dashboard" />} />
         <Route path="/employer/*" element={user ? <EmployerLayout /> : <Navigate to="/EmployerLoginSignup" />} />
 

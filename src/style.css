@@ -296,3 +296,12 @@ footer {
     display: flex;
     justify-content: center;
 }
+
+.no-border {
+    border: none !important;
+}
+
+
+.skill-item {
+    flex: 0 1 auto; /* Prevent items from shrinking */
+}
