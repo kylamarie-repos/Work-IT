@@ -95,21 +95,25 @@ export default function BookmarkedJobs() {
             alert("Please log in before bookmarking jobs");
             return;
         }
-    
+
         const bookmarkJobRef = doc(db, "users", user.uid, "bookmarkedJobs", job.id);
     
         try {
-            await deleteDoc(bookmarkJobRef);
-            
+            if (bookmarkedJobs.has(job.id)) {
+                // If already bookmarked, remove it
+                await deleteDoc(bookmarkJobRef);
+                setBookmarkedJobs(prev => {
+                    const updated = new Set(prev);
+                    updated.delete(job.id);
+                    return updated;
+                });
+            } else {
+                console.log("Cannot find a valid bookmarked job");
+            }
+
             setJobs(prevJobs => prevJobs.filter((j) => j.id !== job.id));
-    
-            setBookmarkedJobs(prev => {
-                const updated = new Set(prev);
-                updated.delete(job.id);
-                return updated;
-            });
         } catch {
-            console.error("Error trying to delete bookmark");
+            console.error("Error trying to toggle bookmark");
         }
     };
     
