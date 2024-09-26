@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { collection, getDocs, query, doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
+import UserContext from '../UserContext';
 
 import { formatDate } from "../script";
 
@@ -14,16 +15,17 @@ export default function Dashboard()
     const [jobs, setJobs] = useState([]);
     const navigate = useNavigate();
 
+    const { user } = useContext(UserContext);
+
     useEffect(() => {
         const fetchCurrentUserUid = () => {
-            const user = auth.currentUser;
             if (user) {
                 setCurrentUserUid(user.uid);
             }
         };
 
         fetchCurrentUserUid();
-    }, [auth]);
+    }, [auth, user]);
 
     useEffect(() => {
         if (currentUserUid) {

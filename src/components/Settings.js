@@ -30,6 +30,15 @@ export default function SettingsPage() {
         fetchEmployerInfo();
     }, [auth.currentUser, db]);
 
+    // Function to extract the file name from the URL after decoding it
+    const getFileNameFromUrl = (url) => {
+        const decodedUrl = decodeURIComponent(url); // Decode the URL
+        const parts = decodedUrl.split('/'); // Split by '/'
+        return parts[parts.length - 1].split('?')[0]; // Get the last part (file name) before any query params
+    };
+
+
+
     const handleFileChange = async (e, fileType) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
@@ -101,7 +110,7 @@ export default function SettingsPage() {
                     onChange={(e) => handleFileChange(e, 'banner')}
                     accept='.png, .jpg'
                 />
-                {bannerUrl && (
+                {bannerUrl && getFileNameFromUrl(bannerUrl) !== 'dummy_banner.png' && (
                     <div className="mb-3">
                         <a href={bannerUrl} target="_blank" rel="noopener noreferrer">View Banner</a>
                     </div>
@@ -117,7 +126,7 @@ export default function SettingsPage() {
                     accept='.png, .jpg'
                 />
                 
-                {logoUrl && (
+                {logoUrl && getFileNameFromUrl(logoUrl) !== 'dummy_logo.png' && (
                     <div className="mb-3">
                         <a href={logoUrl} target="_blank" rel="noopener noreferrer">View Logo</a>
                     </div>

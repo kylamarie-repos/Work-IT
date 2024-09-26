@@ -1,16 +1,12 @@
-import React, { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-// import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { getFirestore, doc, setDoc, getDocs, collection, where, query } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDocs, collection, where, query, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-// import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './firebase';
-import { FirebaseError } from 'firebase/app';
-
 
 export default function EmployerLoginSignup() {
-    const [isSignup, setIsSignup] = useState(true); // Toggle between signup and login
+    const [isSignup, setIsSignup] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [employerName, setEmployerName] = useState('');
@@ -21,50 +17,51 @@ export default function EmployerLoginSignup() {
     const auth = getAuth();
     const db = getFirestore();
 
+
     const handleAuth = async () => {
         try {
             if (isSignup) {
-
-                if (!employerName || !companyName || !email || !password)
-                {
+                if (!employerName || !companyName || !email || !password) {
                     alert("Please fill in all of the fields");
                     return;
                 }
-
+    
                 // Signup logic
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
+                console.log("User created:", user);
                 const uid = user.uid;
-
-                const logoStorageRef = ref(storage, `${user.uid}/logos`);
-                const bannerStorageRef = ref(storage, `${user.uid}/logos`);
-
-                const logoUrl = await getDownloadURL(logoStorageRef);
-                const bannerUrl = await getDownloadURL(bannerStorageRef);
-
-                try {
-                    // Save employer data to Firestore
-                    const employerData = {
-                        employerName,
-                        email,
-                        companyName,
-                        logo: logoUrl, 
-                        banner: bannerUrl 
-                    };
-                    await setDoc(doc(db, "employers", uid), employerData);
-                } catch {
-                    console.log("Error creating firestore document.");
-                    setError("Failed to create employer document in firestore. Please try again.", FirebaseError);
-                    return;
-                }
-
-                
+    
+                // Upload placeholder files for logo and banner
+                const logoPlaceholder = new Blob(['placeholder'], { type: 'image/png' });
+                await uploadBytes(ref(storage, `${uid}/logos/dummy_logo.png`), logoPlaceholder);
+                console.log("Dummy logo uploaded");
+    
+                const bannerPlaceholder = new Blob(['placeholder'], { type: 'image/png' });
+                await uploadBytes(ref(storage, `${uid}/banners/dummy_banner.png`), bannerPlaceholder);
+                console.log("Dummy banner uploaded");
+    
+                // Prepare the URLs
+                const logoUrl = await getDownloadURL(ref(storage, `${uid}/logos/dummy_logo.png`));
+                const bannerUrl = await getDownloadURL(ref(storage, `${uid}/banners/dummy_banner.png`));
+    
+                // Save employer data to Firestore
+                const employerData = {
+                    employerName,
+                    email,
+                    companyName,
+                    logo: logoUrl,
+                    banner: bannerUrl
+                };
+    
+                await setDoc(doc(db, "employers", uid), employerData);
+                console.log("Employer document created:", employerData);
                 navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful signup
             } else {
                 // Login logic
                 const q = query(collection(db, "employers"), where("email", "==", email));
                 const querySnapshot = await getDocs(q);
-
+    
                 if (querySnapshot.empty) {
                     setPromptMessage('No account found with this email. Please sign up.');
                     return;
@@ -73,38 +70,33 @@ export default function EmployerLoginSignup() {
                 navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful login
             }
         } catch (err) {
+            console.error("Error during authentication:", err); // Log the error for debugging
             setError(err.message);
         }
     };
 
-    // const handleGoogleSignIn = async () => {
-    //     const provider = new GoogleAuthProvider();
-    //     try {
-    //         const result = await signInWithPopup(auth, provider);
-    //         const user = result.user;
-    
-    //         // Reference to the employer's document
-    //         const employerDocRef = doc(db, "employers", user.uid);
-    //         const employerDoc = await getDoc(employerDocRef);
-    
-    //         // If the employer doesn't already exist in Firestore, create a new document
-    //         if (!employerDoc.exists()) {
-    //             const employerData = {
-    //                 employerName: user.displayName || '', // You may pull this from Google account info
-    //                 companyName: '', // Manually filled later
-    //                 logo: '',
-    //                 banner: ''
-    //             };
-    //             await setDoc(doc(db, "employers", user.uid), employerData);
-    //         }
-    
-    //         navigate('/employer/Dashboard'); // Redirect to dashboard
-    //     } catch (error) {
-    //         setError(error.message);
-    //     }
-    // };
-    
-    
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Fetch employer data here
+                const docRef = doc(db, "employers", user.uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const employerData = docSnap.data();
+                    console.log("Employer data:", employerData);
+                    // Pass employer data to the state or context for the app
+                } else {
+                    console.log("No such document!");
+                }
+
+                navigate('/employer/Dashboard');
+            }
+        });
+
+        // Cleanup on component unmount
+        return () => unsubscribe();
+    }, [auth, db, navigate]);
 
     return (
         <div className="container mt-5">
@@ -158,10 +150,6 @@ export default function EmployerLoginSignup() {
                 />
             </div>
             {promptMessage && <div className="alert alert-warning m-3">{promptMessage}</div>}
-            {/* <button className="btn btn-outline-danger mt-3" onClick={handleGoogleSignIn}>
-                Sign in with Google
-            </button> */}
-
             {error && <div className="alert alert-danger">{error}</div>}
             <button className="btn btn-primary" onClick={handleAuth}>
                 {isSignup ? 'Sign Up' : 'Login'}
@@ -170,7 +158,7 @@ export default function EmployerLoginSignup() {
                 className="btn btn-link" 
                 onClick={() => {
                     setIsSignup(!isSignup);
-                    setPromptMessage(''); // Reset the prompt message
+                    setPromptMessage('');
                 }}
             >
                 {isSignup ? 'Already have an account? Login' : 'Need an account? Sign Up'}
