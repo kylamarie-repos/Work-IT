@@ -100,14 +100,6 @@ export default function Dashboard()
 						</div>
 					)}
 				</div>
-
-				<h3 className='mt-5'>
-					Candidates
-				</h3>
-				<div>
-					<p>This is where employers can see a preview of the candidates.</p>
-				</div>
-
 			</div>
 		</>
 	);

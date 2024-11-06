@@ -350,18 +350,8 @@ footer {
 
 .job-nav button {
     padding: 10px 20px;
-    background-color: #f0f0f0;
     border: none;
     cursor: pointer;
-}
-
-.job-nav button.active {
-    background-color: #007bff;
-    color: white;
-}
-
-.job-nav button:hover {
-    background-color: #0056b3;
 }
 
 /* Bookmark Button */
@@ -410,4 +400,8 @@ footer {
     margin-top: 8px;
     text-decoration: none;
     color: #007BFF;
+}
+
+#profileIcon {
+    font-size: xx-large;
 }

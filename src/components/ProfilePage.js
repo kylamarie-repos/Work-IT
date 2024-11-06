@@ -67,7 +67,7 @@ export default function ProfilePage() {
 							<strong>Skills: </strong>
 							<ul className='list-group list-group-horizontal flex-wrap'>
 								{skills.map((skill, index) => (
-									<li className='list-group-item no-border' key={index}>
+									<li className='list-group-item border-0' key={index}>
 										<button type="button" className="btn btn-primary rounded-pill" disabled>{skill}</button>
 									</li>
 								))}

@@ -43,7 +43,7 @@ return (
     <div className="candidates-container">
         <nav className="job-nav">
             {jobRoles.map((role) => (
-            <button key={role} onClick={() => handleJobSelection(role)} className={`btn btn-primary ${selectedJob === role ? 'active' : ''}`}>
+            <button key={role} onClick={() => handleJobSelection(role)} className={`btn ${selectedJob === role ? 'btn-warning' : 'btn-primary'}`}>
                 {role}
             </button>
             ))}

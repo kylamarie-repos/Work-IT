@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { Link } from "react-router-dom";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import "../style.css";
 
 export default function Header() {
     const [user, setUser] = useState(null);
     const [employer, setEmployer] = useState(null);
-    const navigate = useNavigate();
     const auth = getAuth();
     const db = getFirestore();
 
@@ -40,15 +39,6 @@ export default function Header() {
         return () => unsubscribe();
     }, [auth, db]);
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            navigate("/"); // Redirect to home page after logout
-        } catch (error) {
-            console.error("Logout Error: ", error);
-        }
-    };
-
     return (
         <header className="bg-dark text-white py-3 ps-5 pe-5">
             <nav className="navbar navbar-expand-md navbar-dark">
@@ -66,21 +56,11 @@ export default function Header() {
                         <li className="nav-item">
                             <Link to="/Jobs" className="nav-link text-light">Jobs</Link>
                         </li>
-                        <li className="nav-item">
-                            <Link to="/Companies" className="nav-link text-light">Companies</Link>
-                        </li>
                         {user && (
-                            <li className="nav-item dropdown">
-                                <Link className="nav-link dropdown-toggle text-light" to="/user/Dashboard" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Profile
+                            <li className="nav-item ms-4">
+                                <Link className="icon-link nav-link text-light" to="/user/Dashboard">
+                                    <i id="profileIcon" class="bi bi-person-circle"></i> 
                                 </Link>
-                                <ul className="dropdown-menu bg-dark dropdown-menu-end" aria-labelledby="profileDropdown">
-                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/Dashboard">View Profile</Link></li>
-                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/AppliedJobs">Applied Jobs</Link></li>
-                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/BookmarkedJobs">Bookmarked Jobs</Link></li>
-                                    <li><hr className="dropdown-divider" /></li>
-                                    <li><button className="dropdown-item text-light dropdown-hover" onClick={handleLogout}>Logout</button></li>
-                                </ul>
                             </li>
                         )}
                         {!user && employer && (
@@ -89,11 +69,9 @@ export default function Header() {
                             </li>
                         )}
                         {!user && employer && (
-                            <li className="nav-item">
+                            <li className="nav-item ms-4">
                                 <Link className="icon-link nav-link text-light" to="/employer/Dashboard">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="bi bi-p-circle-fill" viewBox="0 0 16 16">
-                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.5 4.002V12h1.283V9.164h1.668C10.033 9.164 11 8.08 11 6.586c0-1.482-.955-2.584-2.538-2.584zm2.77 4.072c.893 0 1.419-.545 1.419-1.488s-.526-1.482-1.42-1.482H6.778v2.97z"/>
-                                    </svg>
+                                    <i id="profileIcon" class="bi bi-person-circle"></i> 
                                 </Link>
                             </li>
                         )}
