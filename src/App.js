@@ -44,7 +44,11 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <div className="loading-container">Loading...</div>; // Display a loading indicator while checking auth state
+    return <div className="d-flex justify-content-center">
+    <div className="spinner-border" role="status">
+      <span className="visually-hidden">Loading...</span>
+    </div>
+  </div>;
   }
 
   return (

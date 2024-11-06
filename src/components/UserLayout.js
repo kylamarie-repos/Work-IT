@@ -9,18 +9,17 @@ import BookmarkedJobs from './BookmarkedJobs';
 export default function UserLayout() {
   return (
     <>
-    <div className="d-flex">
-      <UserSidebar /> {/* Render the sidebar */}
-      <div className="flex-grow-1 p-3" style={{ marginLeft: '250px' }}>
+      <div className="d-flex">
+        <UserSidebar /> {/* Render the sidebar */}
+        <div className="content-wrapper flex-grow-1 p-3">
           <Routes>
-              <Route path="/Dashboard" element={<Dashboard />} />
-              <Route path="/Settings" element={<Settings />} />
-              <Route path="/AppliedJobs" element={<AppliedJobs />} />
-              <Route path="/BookmarkedJobs" element={<BookmarkedJobs />} />
+            <Route path="/Dashboard" element={<Dashboard />} />
+            <Route path="/Settings" element={<Settings />} />
+            <Route path="/AppliedJobs" element={<AppliedJobs />} />
+            <Route path="/BookmarkedJobs" element={<BookmarkedJobs />} />
           </Routes>
+        </div>
       </div>
-    </div>
     </>
   );
 }
-

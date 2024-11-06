@@ -1,24 +1,57 @@
-/* General Styles */
-body, html {
-    height: 100%;
-    font-family: "Roboto", sans-serif;
+/* Background Colors */
+.bg-dark {
+    background-color: #263238 !important;
 }
 
-h1, h2, h3, h4, h5, h6, .display-1 {
-    font-family: "Open Sans", sans-serif;
+/* Border Colors */
+.border-primary {
+    border-color: #0097b2 !important;
 }
 
-#logo {
-    max-width: 10vw;
+.border-warning {
+    border-color: #ff660f !important;
 }
 
-.img-fluid {
-    max-width: 100%;
-    height: auto;
+/* Buttons */
+.btn-primary {
+    background-color: #004d66;
+    border: #004d66;
+}
+
+.btn-primary:hover {
+    background-color: #0097b2;
+}
+
+/* Content */
+.content {
+    padding: 20px;
+    flex-grow: 1;
+    background-color: #f4f4f4;
+    overflow-y: auto;
+}
+
+/* Default card size */
+.job-list-card {
+    width: 100%;
+}
+
+.sidebar-visible .job-list-card {
+    width: calc(100% - 30vw);
+}
+
+.job-list-card:hover {
+    border-color: #0097b2;
+}
+
+/* Footer */
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
 /* Flexbox Centering */
-.overlay, .homeOverlay, .loading-container {
+.homeOverlay, .loading-container, .overlay {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -38,37 +71,152 @@ h1, h2, h3, h4, h5, h6, .display-1 {
     text-align: center;
 }
 
-/* Buttons */
-.btn-primary {
-    background-color: #004d66;
-    border: #004d66;
+/* For mobile screens (max-width: 768px) */
+@media (max-width: 768px) {
+    .search-bar.mobile .input-group {
+        display: none;
+    }
+
+    .search-bar.mobile input,
+    .search-bar.mobile select {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .search-bar.mobile .btn {
+        width: 100%;
+    }
+
+    .right-sidebar {
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100%;
+        height: 85vh;
+        transform: translateY(100%);
+    }
+
+    .right-sidebar.show {
+        transform: translateY(0);
+    }
+
+    .job-list-card {
+        flex: 1 0 100% !important;
+        width: 100% !important;
+    }
+
+    .job-list-card .col {
+        flex: 1 0 100% !important;
+    }
+
+    .right-sidebar-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .right-sidebar-content h5 {
+        font-size: 1.2rem;
+    }
+
+    .list-group-item p {
+        font-size: 0.9rem;
+    }
 }
 
-.btn-primary:hover {
-    background-color: #0097b2;
+/* For larger screens (min-width: 768px) */
+@media (min-width: 768px) {
+    .content-wrapper {
+        margin-left: 250px;
+    }
+
+    .search-bar.mobile input,
+    .search-bar.mobile select {
+        width: auto;
+    }
+
+    .sidebar .nav-item {
+        width: 200px;
+    }
+
+    .sidebar .nav-item.active .sidebar-nav-link {
+        width: 200px;
+    }
 }
 
-/* Search Container */
-.searchContainer {
+/* For larger screens (min-width: 768px) */
+@media (min-width: 768px) {
+    .search-bar.mobile input,
+    .search-bar.mobile select {
+        width: auto;
+    }
+}
+
+/* Modal Styles */
+.modal-content-right {
+    border-radius: 0;
+}
+
+.modal-dialog-right {
+    margin: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modal-header-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-right {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 300px;
+    max-width: 100%;
+    border: none;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Profile */
+.profileContainer {
     position: relative;
     width: 100%;
+    height: 300px;
 }
 
-.searchBackgroundImage {
-    background-size: cover;
-    background-position: middle;
-    background-repeat: no-repeat;
+.profilePicture {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    z-index: 2;
+}
+
+.profilePicture img {
     width: 100%;
     height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
+    object-fit: cover;
 }
 
-.large-image {
-    width: 100%;
-    max-height: 50vh; /* Make the image taller */
+/* Right Sidebar */
+.right-sidebar {
+    position: fixed;
+    top: 0;
+    right: -40vw;
+    width: 40vw;
+    height: 100%;
+    background-color: #f8f9fa;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    overflow-y: auto;
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.right-sidebar.show {
+    transform: translateX(-100%);
 }
 
 /* Sidebar */
@@ -121,45 +269,63 @@ h1, h2, h3, h4, h5, h6, .display-1 {
     }
 }
 
-/* Content */
-.content {
-    margin-left: 250px; /* Ensure content is not underneath the sidebar */
-    padding: 20px;
-    flex-grow: 1;
-    background-color: #f4f4f4;
-    overflow-y: auto;
+/* Sidebar for mobile screen */
+@media (max-width: 768px) {
+    .right-sidebar {
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100%;
+        height: 85vh;
+        transform: translateY(100%);
+    }
+
+    .right-sidebar.show {
+        transform: translateY(0);
+    }
 }
 
+/* Sidebar bottom */
+.sidebar-bottom {
+    bottom: 1vh;
+    width: 90%;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+}
 
-/* Modal Styles */
-.modal-right {
-    position: fixed;
-    top: 0;
-    right: 0;
+/* Search Container */
+.searchContainer {
+    position: relative;
+    width: 100%;
+}
+
+.searchBackgroundImage, .profileBackgroundImage {
+    background-size: cover;
+    background-position: middle;
+    background-repeat: no-repeat;
+    width: 100%;
     height: 100%;
-    width: 300px;
-    max-width: 100%;
-    border: none;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-.modal-dialog-right {
-    margin: 0;
-    display: flex;
-    justify-content: flex-end;
+.searchBackgroundImage {
+    z-index: -1;
 }
 
-.modal-content-right {
-    border-radius: 0;
+.profileBackgroundImage {
+    z-index: 1;
 }
 
-.modal-header-right {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Skill Item */
+.skill-item {
+    flex: 0 1 auto;
 }
 
-.icon, .toggle-icon {
+/* Toggle Icon */
+.toggle-icon {
     width: 30px;
     height: 30px;
     cursor: pointer;
@@ -169,139 +335,79 @@ h1, h2, h3, h4, h5, h6, .display-1 {
     opacity: 0.8;
 }
 
-@media (max-width: 768px) {
-    .toggle-icon {
-        width: 30px;
-        height: 30px;
-    }
+.icon {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
 }
 
-/* Border Colors */
-.border-warning {
-    border-color: #ff660f !important;
+/* Job Nav */
+.job-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.border-primary {
-    border-color: #0097b2 !important;
+.job-nav button {
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border: none;
+    cursor: pointer;
 }
 
-/* Background Colors */
-.bg-dark {
-    background-color: #263238 !important;
+.job-nav button.active {
+    background-color: #007bff;
+    color: white;
 }
 
-/* Footer */
-footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+.job-nav button:hover {
+    background-color: #0056b3;
 }
 
-
+/* Bookmark Button */
 .bookmark-btn:hover {
     background-color: cadetblue !important;
 }
 
-
-.searchBackgroundImage {
-    background-size: cover;
-    background-position: middle;
-    background-repeat: no-repeat;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
+.dropdown-hover:hover {
+    background-color: #004d66 !important;
 }
 
-.profileContainer {
-    position: relative;
-    width: 100%; /* or adjust according to your layout */
-    height: 300px; /* or adjust according to your layout */
+#logo {
+    min-width: 5rem;
+    max-width: 10rem;
 }
 
-.profileBackgroundImage {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    z-index: 1;
+#job-listing-card {
+    max-width: 30rem;
+    min-width: 30rem;
 }
 
-.profilePicture {
-    position: absolute;
-    bottom: -50px; /* Adjust as needed to control vertical placement */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px; /* Adjust as needed */
-    height: 120px; /* Adjust as needed */
-    z-index: 2;
+.img-fluid {
+    max-width: 100%;
+    max-height: 50vh;
+    height: auto;
 }
 
-.profilePicture img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.candidate-card {
+    border: 1px solid #ddd;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 8px;
 }
 
-
-.right-sidebar {
-    position: fixed;
-    top: 0;
-    right: -40vw;
-    width: 40vw;
-    height: 100%;
-    background-color: #f8f9fa;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
-    overflow-y: auto;
-    transition: right 0.3s ease-in-out;
-    z-index: 1000;
+.candidate-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
 }
 
-.right-sidebar.show {
-    right: 0;
+.candidate-card p {
+    margin: 4px 0;
 }
 
-.right-sidebar-content {
-    padding: 20px;
-}
-
-
-/* Default card size */
-.job-list-card {
-    width: 100%; /* Full width by default */
-}
-
-/* Card size when sidebar is visible */
-.sidebar-visible .job-list-card {
-    width: calc(100% - 30vw); /* Adjust width to account for sidebar width */
-}
-
-.close-btn:hover {
-    background-color:#f5f5f5 !important;
-}
-
-.job-list-card:hover {
-    border-color: #0097b2;
-}
-
-.sidebar-bottom {
-    bottom: 1vh;
-    width: 90%;
-    position: absolute;
-    display: flex;
-    justify-content: center;
-}
-
-.no-border {
-    border: none !important;
-}
-
-
-.skill-item {
-    flex: 0 1 auto; /* Prevent items from shrinking */
+.candidate-card a {
+    display: inline-block;
+    margin-top: 8px;
+    text-decoration: none;
+    color: #007BFF;
 }

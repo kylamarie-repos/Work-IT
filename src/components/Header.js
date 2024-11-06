@@ -50,14 +50,16 @@ export default function Header() {
     };
 
     return (
-        <>
         <header className="bg-dark text-white py-3 ps-5 pe-5">
-            <div className="d-flex justify-content-between align-items-center fixed">
-                <Link className="nav-link text-light" aria-current="page" to="/">
+            <nav className="navbar navbar-expand-md navbar-dark">
+                <Link className="navbar-brand" to="/">
                     <img src="../images/clear-logo.png" alt="Logo" id="logo" className="d-inline-block align-text-top" />
                 </Link>
-                <nav>
-                    <ul className="nav">
+                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="navbarNav">
+                    <ul className="navbar-nav ms-auto">
                         <li className="nav-item">
                             <Link to="/job-listings" className="nav-link text-light">Search</Link>
                         </li>
@@ -67,20 +69,17 @@ export default function Header() {
                         <li className="nav-item">
                             <Link to="/Companies" className="nav-link text-light">Companies</Link>
                         </li>
-                        {/* <li className="nav-item">
-                            <Link to="/AddField" className="nav-link text-light">Add Field</Link>
-                        </li> */}
                         {user && (
                             <li className="nav-item dropdown">
                                 <Link className="nav-link dropdown-toggle text-light" to="/user/Dashboard" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Profile
                                 </Link>
-                                <ul className="dropdown-menu bg-dark" aria-labelledby="profileDropdown">
-                                    <li><Link className="dropdown-item text-light" to="/user/Dashboard">View Profile</Link></li>
-                                    <li><Link className="dropdown-item text-light" to="/user/AppliedJobs">Applied Jobs</Link></li>
-                                    <li><Link className="dropdown-item text-light" to="/user/BookmarkedJobs">Bookmarked Jobs</Link></li>
+                                <ul className="dropdown-menu bg-dark dropdown-menu-end" aria-labelledby="profileDropdown">
+                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/Dashboard">View Profile</Link></li>
+                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/AppliedJobs">Applied Jobs</Link></li>
+                                    <li><Link className="dropdown-item text-light dropdown-hover" to="/user/BookmarkedJobs">Bookmarked Jobs</Link></li>
                                     <li><hr className="dropdown-divider" /></li>
-                                    <li><button className="dropdown-item text-light" onClick={handleLogout}>Logout</button></li>
+                                    <li><button className="dropdown-item text-light dropdown-hover" onClick={handleLogout}>Logout</button></li>
                                 </ul>
                             </li>
                         )}
@@ -92,27 +91,25 @@ export default function Header() {
                         {!user && employer && (
                             <li className="nav-item">
                                 <Link className="icon-link nav-link text-light" to="/employer/Dashboard">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="bi bi-p-circle-fill" viewBox="0 0 16 16">
-                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.5 4.002V12h1.283V9.164h1.668C10.033 9.164 11 8.08 11 6.586c0-1.482-.955-2.584-2.538-2.584zm2.77 4.072c.893 0 1.419-.545 1.419-1.488s-.526-1.482-1.42-1.482H6.778v2.97z"/>
-                                </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="bi bi-p-circle-fill" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.5 4.002V12h1.283V9.164h1.668C10.033 9.164 11 8.08 11 6.586c0-1.482-.955-2.584-2.538-2.584zm2.77 4.072c.893 0 1.419-.545 1.419-1.488s-.526-1.482-1.42-1.482H6.778v2.97z"/>
+                                    </svg>
                                 </Link>
                             </li>
                         )}
-                        
                         {!user && !employer && (
-                            <li className="nav-item">
-                                <Link to="/LoginSignup" className="nav-link text-light border rounded border-primary me-2">Login/Signup</Link>
-                            </li>
-                        )}
-                        {!user && !employer && (
-                            <li className="nav-item">
-                                <Link to="/EmployerLoginSignup" className="nav-link text-light border rounded border-warning">Employer Login</Link>
-                            </li>
+                            <>
+                                <li className="nav-item">
+                                    <Link to="/LoginSignup" className="nav-link text-light border rounded border-primary me-2">Login/Signup</Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="/EmployerLoginSignup" className="nav-link text-light border rounded border-warning">Employer Login</Link>
+                                </li>
+                            </>
                         )}
                     </ul>
-                </nav>
-            </div>
+                </div>
+            </nav>
         </header>
-        </>
     );
 }

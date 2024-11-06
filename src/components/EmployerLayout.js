@@ -11,7 +11,7 @@ export default function EmployerLayout() {
     <>
     <div className="d-flex">
       <Sidebar /> {/* Render the sidebar */}
-      <div className="flex-grow-1 p-3" style={{ marginLeft: '250px' }}>
+      <div className="content-wrapper flex-grow-1 p-3">
           <Routes>
               <Route path="/Dashboard" element={<Dashboard />} />
               <Route path="/Employerjobs" element={<EmployerJobs />} />
