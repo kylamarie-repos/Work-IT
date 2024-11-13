@@ -26,13 +26,11 @@ export default function EmployerLoginSignup() {
                     return;
                 }
     
-                // Signup logic
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 console.log("User created:", user);
                 const uid = user.uid;
     
-                // Upload placeholder files for logo and banner
                 const logoPlaceholder = new Blob(['placeholder'], { type: 'image/png' });
                 await uploadBytes(ref(storage, `${uid}/logos/dummy_logo.png`), logoPlaceholder);
                 console.log("Dummy logo uploaded");
@@ -41,11 +39,9 @@ export default function EmployerLoginSignup() {
                 await uploadBytes(ref(storage, `${uid}/banners/dummy_banner.png`), bannerPlaceholder);
                 console.log("Dummy banner uploaded");
     
-                // Prepare the URLs
                 const logoUrl = await getDownloadURL(ref(storage, `${uid}/logos/dummy_logo.png`));
                 const bannerUrl = await getDownloadURL(ref(storage, `${uid}/banners/dummy_banner.png`));
     
-                // Save employer data to Firestore
                 const employerData = {
                     employerName,
                     email,
@@ -56,9 +52,8 @@ export default function EmployerLoginSignup() {
     
                 await setDoc(doc(db, "employers", uid), employerData);
                 console.log("Employer document created:", employerData);
-                navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful signup
+                navigate('/employer/Dashboard'); 
             } else {
-                // Login logic
                 const q = query(collection(db, "employers"), where("email", "==", email));
                 const querySnapshot = await getDocs(q);
     
@@ -67,10 +62,10 @@ export default function EmployerLoginSignup() {
                     return;
                 }
                 await signInWithEmailAndPassword(auth, email, password);
-                navigate('/employer/Dashboard'); // Redirect to employer dashboard on successful login
+                navigate('/employer/Dashboard');
             }
         } catch (err) {
-            console.error("Error during authentication:", err); // Log the error for debugging
+            console.error("Error during authentication:", err);
             setError(err.message);
         }
     };
@@ -78,14 +73,12 @@ export default function EmployerLoginSignup() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Fetch employer data here
                 const docRef = doc(db, "employers", user.uid);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     const employerData = docSnap.data();
                     console.log("Employer data:", employerData);
-                    // Pass employer data to the state or context for the app
                 } else {
                     console.log("No such document!");
                 }
@@ -94,7 +87,6 @@ export default function EmployerLoginSignup() {
             }
         });
 
-        // Cleanup on component unmount
         return () => unsubscribe();
     }, [auth, db, navigate]);
 

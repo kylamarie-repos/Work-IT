@@ -26,19 +26,17 @@ export default function Sidebar() {
 					} else {
 						console.error("Employer document does not exist.");
 
-						// Check sessionStorage to prevent infinite reload
 						const hasReloaded = sessionStorage.getItem('hasReloaded');
 						if (!hasReloaded) {
-							// Poll for document creation every 5 seconds
 							const intervalId = setInterval(async () => {
 								const docSnap = await getDoc(employerDocRef);
 								if (docSnap.exists()) {
 									console.log('Employer document detected, reloading...');
-									clearInterval(intervalId); // Stop polling
-									sessionStorage.setItem('hasReloaded', 'true'); // Mark reload
-									window.location.reload(); // Force page reload
+									clearInterval(intervalId);
+									sessionStorage.setItem('hasReloaded', 'true');
+									window.location.reload();
 								}
-							}, 5000); // Poll every 5 seconds
+							}, 5000);
 						}
 					}
 				} catch (error) {
@@ -53,7 +51,7 @@ export default function Sidebar() {
 	const handleLogout = async () => {
 		try {
 			await signOut(auth);
-			navigate("/"); // Redirect to home page after logout
+			navigate("/");
 		} catch (error) {
 			console.error("Logout Error: ", error);
 		}
@@ -61,7 +59,6 @@ export default function Sidebar() {
 
 	return (
 		<>
-			{/* Sidebar for large screens */}
 			<div className="sidebar p-3 text-white bg-dark border-top d-none d-md-block"
 				style={{ width: '250px', height: '100vh', position: 'fixed' }}>
 				<Link to="/employer/Dashboard" className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
@@ -82,6 +79,11 @@ export default function Sidebar() {
 					<li className={`nav-item mt-3 ${location.pathname === '/employer/Candidates' ? 'active' : ''}`}>
 						<Link to="/employer/Candidates" className="sidebar-nav-link">
 							Candidates
+						</Link>
+					</li>
+					<li className={`nav-item mt-3 ${location.pathname === '/employer/Settings' ? 'active' : ''}`}>
+						<Link to="/employer/Settings" className="sidebar-nav-link">
+							Settings
 						</Link>
 					</li>
 				</ul>

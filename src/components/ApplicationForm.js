@@ -65,13 +65,13 @@ export default function ApplicationForm() {
         let coverLetterToUpload = coverLetter;
         if (coverLetterType === 'uploaded' && uploadedCoverLetter) {
             await uploadFile(uploadedCoverLetter, 'coverLetter');
-            coverLetterToUpload = coverLetterUrl; // Set coverLetterUrl after uploading the file
+            coverLetterToUpload = coverLetterUrl;
         }
     
         if (uploadedResume && !resumeUrl) {
             await uploadFile(uploadedResume, 'resume');
         }
-
+    
         const applicationData = {
             name: applicantName,
             resume: resumeUrl || '',
@@ -91,28 +91,27 @@ export default function ApplicationForm() {
                 return;
             }
     
-            const candidatesRef = doc(db, 'employers', employerId, 'candidates', user.uid);
+            // Unique path by including job.id to prevent overwriting
+            const candidatesRef = doc(db, 'employers', employerId, 'candidates', `${user.uid}_${job.id}`);
             await setDoc(candidatesRef, applicationData);
-
+    
             const appliedJobsRef = doc(db, 'users', user.uid, 'appliedJobs', job.id);
             await setDoc(appliedJobsRef, applicationData);
     
             const jobRef = doc(db, 'employers', employerId, 'jobAdvertisements', job.id);
             await updateDoc(jobRef, {
-                numApplications: increment(1) // Increment the number of applications by 1
+                numApplications: increment(1)
             });
-
-
+    
             navigate("/Applied");
         } catch (error) {
             console.error("Error submitting application:", error);
         }
-    };
-    
+    };    
 
     const uploadFile = async (file, fileType) => {
         if (!file) return;
-
+    
         setUploading(true);
         try {
             const storagePath = fileType === 'coverLetter'
@@ -121,13 +120,13 @@ export default function ApplicationForm() {
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);
-
+    
             if (fileType === 'coverLetter') {
                 setCoverLetterUrl(url);
-                await setDoc(doc(db, "users", auth.currentUser.uid), { coverLetterUrl: url });
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { coverLetterUrl: url });
             } else {
                 setResumeUrl(url);
-                await setDoc(doc(db, "users", auth.currentUser.uid), { resumeUrl: url });
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { resumeUrl: url });
             }
         } catch (error) {
             console.error(`Error uploading ${fileType}:`, error);
@@ -135,14 +134,16 @@ export default function ApplicationForm() {
             setUploading(false);
         }
     };
+    
 
-    const handleFileChange = (e, fileType) => {
+    const handleFileChange = async (e, fileType) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
             const fileName = selectedFile.name || '';
             if (fileType === 'coverLetter') {
                 if (fileName.indexOf('.pdf') !== -1 || fileName.indexOf('.docx') !== -1) {
                     setUploadedCoverLetter(selectedFile);
+                    await uploadFile(selectedFile, 'coverLetter');
                 } else {
                     console.error("Unsupported cover letter file type");
                 }

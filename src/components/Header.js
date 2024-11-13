@@ -59,19 +59,14 @@ export default function Header() {
                         {user && (
                             <li className="nav-item ms-4">
                                 <Link className="icon-link nav-link text-light" to="/user/Dashboard">
-                                    <i id="profileIcon" class="bi bi-person-circle"></i> 
+                                    <i id="profileIcon" className="bi bi-person-circle"></i> 
                                 </Link>
-                            </li>
-                        )}
-                        {!user && employer && (
-                            <li className="nav-item">
-                                <Link className="nav-link text-light" to="/employer/Settings">Settings</Link>
                             </li>
                         )}
                         {!user && employer && (
                             <li className="nav-item ms-4">
                                 <Link className="icon-link nav-link text-light" to="/employer/Dashboard">
-                                    <i id="profileIcon" class="bi bi-person-circle"></i> 
+                                    <i id="profileIcon" className="bi bi-person-circle"></i> 
                                 </Link>
                             </li>
                         )}

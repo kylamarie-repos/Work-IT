@@ -10,7 +10,7 @@ export default function EmployerLayout() {
   return (
     <>
     <div className="d-flex">
-      <Sidebar /> {/* Render the sidebar */}
+      <Sidebar />
       <div className="content-wrapper flex-grow-1 p-3">
           <Routes>
               <Route path="/Dashboard" element={<Dashboard />} />

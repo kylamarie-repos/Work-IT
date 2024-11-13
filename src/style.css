@@ -201,24 +201,6 @@ footer {
     object-fit: cover;
 }
 
-/* Right Sidebar */
-.right-sidebar {
-    position: fixed;
-    top: 0;
-    right: -40vw;
-    width: 40vw;
-    height: 100%;
-    background-color: #f8f9fa;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
-    overflow-y: auto;
-    transition: transform 0.3s ease-in-out;
-    z-index: 1000;
-}
-
-.right-sidebar.show {
-    transform: translateX(-100%);
-}
-
 /* Sidebar */
 .sidebar {
     width: 250px;
@@ -227,6 +209,7 @@ footer {
     position: fixed;
     height: 100vh;
     padding: 20px;
+    overflow-y: hidden !important;
 }
 
 .sidebar .logo {
@@ -266,6 +249,37 @@ footer {
 
     .sidebar .nav-item.active .sidebar-nav-link {
         width: 200px;
+    }
+}
+
+/* Right Sidebar */
+.right-sidebar {
+    background-color: #f8f9fa;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    overflow-y: auto;
+}
+
+.right-sidebar.show {
+    transform: translateX(-100%);
+}
+
+/* Right Sidebar for Desktop */
+@media (min-width: 768px) {
+    .right-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0; 
+        width: 36vw; /* Adjust the width as needed */
+        height: 100vh;
+        transform: translateX(100%);
+        overflow-y: auto;
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    /* Show sidebar when 'show' class is active */
+    .right-sidebar.show {
+        transform: translateX(0);
     }
 }
 
@@ -404,4 +418,12 @@ footer {
 
 #profileIcon {
     font-size: xx-large;
+}
+
+.scrollable-container {
+    max-height: 80vh;
+    overflow-y: auto !important;
+    padding-right: 1rem;
+    height: 100vh;
+    overflow: hidden;
 }

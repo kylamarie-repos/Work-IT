@@ -1,7 +1,7 @@
 import React from "react";
 import "../style.css";
 import SearchBar from './SearchBar';
-import JobCategories from './JobCategories';
+import Jobs from "./Jobs";
 
 export default function Content() {
     return (
@@ -16,14 +16,13 @@ export default function Content() {
                             <SearchBar />
                         </div>
                         <div className="col-lg-6 col-md-5">
-                            {/* <img src="../images/Open source-cuate.svg" className="img-fluid large-image" alt="programmers" /> */}
                             <img src="../images/Innovation-amico.svg" className="img-fluid large-image front-img" alt="programmers" />
                         </div>
                     </div>
                 </div>
             </div>
             <div className="container">
-                <JobCategories />
+                <Jobs />
             </div>
         </>
     );

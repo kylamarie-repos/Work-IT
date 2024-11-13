@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-// import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { getFirestore, doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from './firebase';
 
-// import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-
-
 export default function LoginSignup() {
-    const [isSignup, setIsSignup] = useState(true); // Toggle between signup and login
+    const [isSignup, setIsSignup] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -21,7 +17,7 @@ export default function LoginSignup() {
     const auth = getAuth();
     const db = getFirestore();
 
-    const location = useLocation(); // Get the location object
+    const location = useLocation();
     const fromJob = location.state?.fromJob;
 
     const storageRef = ref(storage, 'presetProfilePictures/blank-profile-picture.png');
@@ -39,7 +35,7 @@ export default function LoginSignup() {
     
                 if (!user) {
                     console.error("User not authenticated");
-                    return; // Exit if user is not authenticated
+                    return;
                 }
     
                 const profilePictureUrl = await getDownloadURL(storageRef);
@@ -52,13 +48,11 @@ export default function LoginSignup() {
                     profilePictureUrl: profilePictureUrl || ""
                 };
     
-                // Create the user document in Firestore
                 await setDoc(doc(db, "users", user.uid), userData);
-                console.log("User document created in Firestore"); // Correct logging here
+                console.log("User document created in Firestore");
     
-                navigate('/user/Dashboard'); // Redirect on successful signup
+                navigate('/user/Dashboard');
             } else {
-                // Login logic
                 const q = query(collection(db, "users"), where("email", "==", email));
                 const querySnapshot = await getDocs(q);
     
@@ -67,7 +61,6 @@ export default function LoginSignup() {
                     return;
                 }
                 await signInWithEmailAndPassword(auth, email, password);
-                navigate('/user/Dashboard'); // Redirect on successful login
             }
     
             if (fromJob) {
@@ -76,40 +69,9 @@ export default function LoginSignup() {
     
         } catch (err) {
             setError(err.message);
-            console.error("Error during authentication:", err); // Log the error for debugging
+            console.error("Error during authentication:", err);
         }
     };
-    
-    
-
-    // const handleGoogleSignIn = async () => {
-    //     const provider = new GoogleAuthProvider();
-    //     try {
-    //         const result = await signInWithPopup(auth, provider);
-    //         const user = result.user;
-    
-    //         // Check if user already exists in Firestore
-    //         const userDocRef = doc(db, "users", user.uid);
-    //         const userDoc = await getDoc(userDocRef);
-    
-    //         // If the user doesn't already exist in Firestore, create a new document
-    //         if (!userDoc.exists()) {
-    //             await setDoc(doc(db, "users", user.uid), {
-    //                 firstName: user.displayName.split(' ')[0] || '',
-    //                 lastName: user.displayName.split(' ')[1] || '',
-    //                 email: user.email,
-    //                 skills: '',
-    //                 resume: '',
-    //                 bookmarkedJobs: [],
-    //                 appliedJobs: []
-    //             });
-    //         }
-    
-    //         navigate('/user/Dashboard'); // Redirect to profile page
-    //     } catch (error) {
-    //         setError(error.message);
-    //     }
-    // };
     
 
     return (
@@ -161,9 +123,6 @@ export default function LoginSignup() {
             </div>
             {promptMessage && <div className="alert alert-warning m-3">{promptMessage}</div>}
             {error && <div className="alert alert-danger">{error}</div>}
-            {/* <button className="btn btn-outline-danger mt-3" onClick={handleGoogleSignIn}>
-                Sign in with Google
-            </button> */}
             <button className="btn btn-primary" onClick={handleAuth}>
                 {isSignup ? 'Sign Up' : 'Login'}
             </button>
@@ -171,7 +130,7 @@ export default function LoginSignup() {
                 className="btn btn-link" 
                 onClick={() => {
                     setIsSignup(!isSignup);
-                    setPromptMessage(''); // Reset the prompt message
+                    setPromptMessage('');
                 }}
             >
                 {isSignup ? 'Already have an account? Login' : 'Need an account? Sign Up'}

@@ -95,7 +95,7 @@ export default function EmployerJobs() {
 	};
 
 	return (
-		<div className="mt-4">
+		<div className="mt-4 scrollable-container">
 			<div className="row mb-3">
 				<div className="col-md-4 mt-2">
 					<div className="card h-100 create-job-card align-items-center justify-content-center shadow" id='job-listing-card' onClick={handleAddJobClick}>
