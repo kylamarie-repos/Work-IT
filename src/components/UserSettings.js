@@ -116,8 +116,8 @@ export default function UserSettingsPage() {
         try {
             const userId = auth.currentUser.uid; // Get the user ID
             const storagePath = fileType === 'profilePicture'
-                ? `${userId}/profilePictures/${file.name}`  // Store profile picture in a user-specific folder
-                : `${userId}/resumes/${file.name}`;         // Store resume in a user-specific folder
+                ? `${userId}/profilePictures/${file.name}`
+                : `${userId}/resumes/${file.name}`;
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);

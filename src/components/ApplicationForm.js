@@ -2,34 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase';
 import { useNavigate } from "react-router-dom";
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function ApplicationForm() {
     const auth = getAuth();
     const db = getFirestore();
+    const storage = getStorage();
     const location = useLocation();
     const navigate = useNavigate();
 
     const { job } = location.state || {};
-    const employerId = job?.employerId;
     const companyName = job?.companyName;
     const datePosted = job?.datePosted;
     const user = auth.currentUser;
 
-    const [uploading, setUploading] = useState(false);
     const [promptMessage, setPromptMessage] = useState('');
-
     const [skills, setSkills] = useState([]);
     const [applicantName, setApplicantName] = useState('');
-
     const [coverLetterUrl, setCoverLetterUrl] = useState('');
     const [coverLetter, setCoverLetter] = useState('');
-    const [resumeUrl, setResumeUrl] = useState('');
-    const [uploadedResume, setUploadedResume] = useState(null);
     const [coverLetterType, setCoverLetterType] = useState('written'); // 'written' or 'uploaded'
-    const [uploadedCoverLetter, setUploadedCoverLetter] = useState(null);
+    const [resumeUrl, setResumeUrl] = useState(''); // State for resume URL
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -39,124 +33,110 @@ export default function ApplicationForm() {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     setCoverLetterUrl(data.coverLetterUrl || '');
-                    setResumeUrl(data.resumeUrl || '');
+                    setResumeUrl(data.resumeUrl || ''); // Get resume URL from user profile
                     setSkills(data.skills || []);
                     setApplicantName(`${data.firstName || ''} ${data.lastName || ''}`);
-                    if (data.resumeUrl) {
-                        setResumeUrl(data.resumeUrl);
-                    }
                 } else {
                     setPromptMessage('Please complete your profile by adding your personal information.');
                 }
             }
         };
-    
+
         fetchUserInfo();
-    }, [user, db, employerId]); 
+    }, [user, db]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         if (!user || !job) {
             console.error('User or job information is missing.');
             return;
         }
-    
+
+        // Check if resume URL is valid before submitting
+        if (!resumeUrl) {
+            alert("You must upload a resume before applying.");
+            return;
+        }
+
         let coverLetterToUpload = coverLetter;
-        if (coverLetterType === 'uploaded' && uploadedCoverLetter) {
-            await uploadFile(uploadedCoverLetter, 'coverLetter');
-            coverLetterToUpload = coverLetterUrl;
+        if (coverLetterType === 'uploaded' && coverLetterUrl) {
+            coverLetterToUpload = coverLetterUrl; // Use the uploaded cover letter URL
         }
-    
-        if (uploadedResume && !resumeUrl) {
-            await uploadFile(uploadedResume, 'resume');
-        }
-    
+
         const applicationData = {
             name: applicantName,
-            resume: resumeUrl || '',
+            resume: resumeUrl,  // Use resume URL from user's profile
             coverLetter: coverLetterToUpload,
             status: 'Applied',
             skills,
             appliedRole: job.title,
             companyName,
             applicationDate: new Date(),
-            datePosted
+            datePosted,
+            email: user.email // Store the user's email in the application data
         };
-    
+
         try {
-            const employerId = job.employerId;
+            const employerId = job?.employerId;
             if (!employerId) {
                 console.error('Employer ID is missing!');
                 return;
             }
-    
-            // Unique path by including job.id to prevent overwriting
+
             const candidatesRef = doc(db, 'employers', employerId, 'candidates', `${user.uid}_${job.id}`);
             await setDoc(candidatesRef, applicationData);
-    
+
             const appliedJobsRef = doc(db, 'users', user.uid, 'appliedJobs', job.id);
             await setDoc(appliedJobsRef, applicationData);
-    
+
+            // First, resolve the cover letter URL if it's not already resolved
+            let coverLetterResolved = coverLetterToUpload;
+            if (coverLetterType === 'uploaded' && coverLetterUrl) {
+                // Resolve the cover letter URL from storage
+                const coverLetterRef = ref(storage, coverLetterUrl);
+                coverLetterResolved = await getDownloadURL(coverLetterRef);
+            }
+
+            // Ensure the applicants data is set correctly
             const jobRef = doc(db, 'employers', employerId, 'jobAdvertisements', job.id);
+
             await updateDoc(jobRef, {
-                numApplications: increment(1)
+                numApplications: increment(1),
+                applicants: {
+                    [`${user.uid}`]: {
+                        email: user.email,
+                        name: applicantName,
+                        resume: resumeUrl,
+                        coverLetter: coverLetterResolved, // Ensure the resolved cover letter is used
+                        appliedRole: job.title,
+                        applicationDate: new Date()
+                    }
+                }
             });
-    
+
             navigate("/Applied");
         } catch (error) {
             console.error("Error submitting application:", error);
         }
-    };    
-
-    const uploadFile = async (file, fileType) => {
-        if (!file) return;
-    
-        setUploading(true);
-        try {
-            const storagePath = fileType === 'coverLetter'
-                ? `${auth.currentUser.uid}coverLetters/${auth.currentUser.uid}/${file.name}`
-                : `${auth.currentUser.uid}resumes/${auth.currentUser.uid}/${file.name}`;
-            const storageRef = ref(storage, storagePath);
-            await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(storageRef);
-    
-            if (fileType === 'coverLetter') {
-                setCoverLetterUrl(url);
-                await updateDoc(doc(db, "users", auth.currentUser.uid), { coverLetterUrl: url });
-            } else {
-                setResumeUrl(url);
-                await updateDoc(doc(db, "users", auth.currentUser.uid), { resumeUrl: url });
-            }
-        } catch (error) {
-            console.error(`Error uploading ${fileType}:`, error);
-        } finally {
-            setUploading(false);
-        }
     };
-    
 
-    const handleFileChange = async (e, fileType) => {
+    const handleFileChange = async (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
             const fileName = selectedFile.name || '';
-            if (fileType === 'coverLetter') {
-                if (fileName.indexOf('.pdf') !== -1 || fileName.indexOf('.docx') !== -1) {
-                    setUploadedCoverLetter(selectedFile);
-                    await uploadFile(selectedFile, 'coverLetter');
-                } else {
-                    console.error("Unsupported cover letter file type");
-                }
-            } else if (fileType === 'resume') {
-                if (fileName.indexOf('.pdf') !== -1 || fileName.indexOf('.docx') !== -1) {
-                    setUploadedResume(selectedFile);
-                } else {
-                    console.error("Unsupported resume file type");
-                }
+            if (fileName.indexOf('.pdf') !== -1 || fileName.indexOf('.docx') !== -1) {
+                // Handle cover letter upload
+                const filePath = `${auth.currentUser.uid}/coverLetters/${selectedFile.name}`;
+                const storageRef = ref(storage, filePath);
+                await uploadBytes(storageRef, selectedFile);
+                const url = await getDownloadURL(storageRef);
+                setCoverLetterUrl(url);
+            } else {
+                console.error("Unsupported file type");
             }
         }
     };
-
 
     return (
         <div className='container'>
@@ -165,6 +145,22 @@ export default function ApplicationForm() {
                     <h1>Apply for {job?.title}</h1>
                     <form onSubmit={handleSubmit}>
                         {promptMessage && <p>{promptMessage}</p>}
+                        
+                        {/* Resume Section */}
+                        <div className='resume-box mt-4'>
+                            <div>
+                                <label>Resume</label>
+                                <div>
+                                    {resumeUrl ? (
+                                        <a href={resumeUrl} target="_blank" rel="noopener noreferrer">View Resume</a>
+                                    ) : (
+                                        <p>No Resume uploaded.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Cover Letter Section */}
                         <div className='coverletter-box mt-4'>
                             <div>
                                 <ul className="list-group list-group-horizontal">
@@ -208,60 +204,29 @@ export default function ApplicationForm() {
                                         />
                                     </div>
                                 ) : (
-                                        <div className='mt-4'>
-                                            <label>Upload Cover Letter</label>
-                                            <input
-                                                type="file"
-                                                className="form-control"
-                                                onChange={(e) => handleFileChange(e, 'coverLetter')}
-                                                disabled={uploading}
-                                                accept=".pdf, .docx"
-                                                required
-                                            />
-                                            {uploading && <p>Uploading...</p>}
-    
-                                            <div className='mt-3'>
-                                                {uploadedCoverLetter ? (
-                                                    <a href={URL.createObjectURL(uploadedCoverLetter)} target="_blank" rel="noopener noreferrer">View Cover Letter</a>
-                                                ) : (
-                                                    <p>No Cover Letter uploaded.</p>
-                                                )}
-                                            </div>
+                                    <div className='mt-4'>
+                                        <label>Upload Cover Letter</label>
+                                        <input
+                                            type="file"
+                                            className="form-control"
+                                            onChange={handleFileChange}
+                                            accept=".pdf, .docx"
+                                            required
+                                        />
+                                        <div className='mt-3'>
+                                            {coverLetterUrl ? (
+                                                <a href={coverLetterUrl} target="_blank" rel="noopener noreferrer">View Cover Letter</a>
+                                            ) : (
+                                                <p>No Cover Letter uploaded.</p>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div className='mt-4'>
-                            <label>Resume</label>
-                            {resumeUrl ? (
-                                <ul className="list-group list-group-horizontal">
-                                <li className="list-group-item"><p className='mt-2'>Resume already uploaded <br/> <a href={resumeUrl} target="_blank" rel="noopener noreferrer">View Resume</a></p></li>
-                                </ul>
-                            ) : (
-                                <>
-                                    <input
-                                        type="file"
-                                        className="form-control"
-                                        accept=".docx,.pdf"
-                                        onChange={(e) => handleFileChange(e, 'resume')}
-                                        disabled={uploading}
-                                        required
-                                    />
-                                    {uploading && <p>Uploading...</p>}
-                                    <div className='mt-3'>
-                                        {uploadedResume ? (
-                                            <a href={URL.createObjectURL(uploadedResume)} target="_blank" rel="noopener noreferrer">View Resume</a>
-                                        ) : (
-                                            <p>No Resume uploaded.</p>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className='mt-4'>
-                            <button className='btn btn-primary' type="submit">Submit Application</button>
+                        <div className="mt-4">
+                            <button type="submit" className="btn btn-primary">Apply Now</button>
                         </div>
                     </form>
                 </div>
